@@ -2,6 +2,7 @@ import { ProductDetails } from "@/app/product/components/product-details";
 import { ProductDetailsSkeleton } from "@/app/product/components/product-details-skeleton";
 import { ProductReviews } from "@/app/product/components/product-reviews";
 import { RelatedProducts } from "@/app/product/components/related-products";
+import { fetchProductById } from "@/utility/fetchProductById";
 import { Suspense } from "react";
 
 interface ProductPageProps {
@@ -10,11 +11,15 @@ interface ProductPageProps {
   };
 }
 
-export default function ProductPage({ params }: ProductPageProps) {
+export default async function ProductPage({ params }: ProductPageProps) {
+  const productId = params.id;
+  const product = await fetchProductById(productId);
+
+  console.log("Product fetched:", product);
   return (
     <div className="container mx-auto px-4 py-8">
       <Suspense fallback={<ProductDetailsSkeleton />}>
-        <ProductDetails productId={params.id} />
+        <ProductDetails product={product} />
       </Suspense>
 
       <div className="mt-16">
