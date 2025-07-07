@@ -1,6 +1,5 @@
 "use client";
 
-import { ProductCard } from "@/app/category/components/product-card";
 import { DealsBanner } from "@/app/deals/components/deals-banner";
 import { DealsCategories } from "@/app/deals/components/deals-categories";
 import { DealsTimer } from "@/app/deals/components/deals-timer";
@@ -254,35 +253,35 @@ export default function DealsPage() {
           </TabsList>
 
           <TabsContent value="flash" className="mt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {dealsData.flashDeals.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
-            </div>
+            </div> */}
           </TabsContent>
 
           <TabsContent value="daily" className="mt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {dealsData.dailyDeals.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
-            </div>
+            </div> */}
           </TabsContent>
 
           <TabsContent value="weekly" className="mt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {dealsData.weeklyDeals.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
-            </div>
+            </div> */}
           </TabsContent>
 
           <TabsContent value="clearance" className="mt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {dealsData.clearance.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
-            </div>
+            </div> */}
           </TabsContent>
         </Tabs>
 

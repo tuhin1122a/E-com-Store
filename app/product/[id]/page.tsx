@@ -15,7 +15,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const productId = params.id;
   const product = await fetchProductById(productId);
 
-  console.log("Product fetched:", product);
   return (
     <div className="container mx-auto px-4 py-8">
       <Suspense fallback={<ProductDetailsSkeleton />}>

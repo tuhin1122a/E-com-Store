@@ -12,7 +12,7 @@ import { apiClient } from "@/lib/api";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface CartItem {
   id: string;
@@ -36,7 +36,6 @@ interface CheckoutData {
 export default function CheckoutPage() {
   const { data: session } = useSession();
   const user = session?.user;
-  const loading = useSession().status === "loading";
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -48,13 +47,13 @@ export default function CheckoutPage() {
     sameAsBilling: true,
   });
 
-  useEffect(() => {
-    if (user) {
-      fetchCart();
-    } else {
-      router.push("/login?redirect=/checkout");
-    }
-  }, [user, router]);
+  // useEffect(() => {
+  //   if (user) {
+  //     fetchCart();
+  //   } else {
+  //     router.push("/login?redirect=/checkout");
+  //   }
+  // }, [user, router]);
 
   const fetchCart = async () => {
     try {

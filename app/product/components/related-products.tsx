@@ -1,5 +1,3 @@
-import { ProductCard } from "@/app/category/components/product-card";
-
 interface RelatedProductsProps {
   productId: string;
 }
@@ -51,9 +49,9 @@ const relatedProducts = [
 export function RelatedProducts({ productId }: RelatedProductsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {relatedProducts.map((product) => (
+      {/* {relatedProducts.map((product) => (
         <ProductCard key={product.id} product={product} />
-      ))}
+      ))} */}
     </div>
   );
 }

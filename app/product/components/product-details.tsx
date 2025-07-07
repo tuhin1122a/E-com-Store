@@ -21,27 +21,29 @@ import {
   ShoppingCart,
   Star,
   Truck,
+  X,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface ProductDetailsProps {
   product: any;
 }
 
 export function ProductDetails({ product }: ProductDetailsProps) {
+  const { data: session } = useSession();
+  const accessToken = session?.user?.accessToken;
+
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedColor, setSelectedColor] = useState("black");
-  const [selectedSize, setSelectedSize] = useState("One Size");
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
+  const [loadingCart, setLoadingCart] = useState(false);
+  const [loadingWishlist, setLoadingWishlist] = useState(false);
 
-  const handleAddToCart = async () => {
-    setIsAddingToCart(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsAddingToCart(false);
-  };
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const images = product.images.map((img: any) => img.url);
 
   const discountPercentage =
     product.salePrice && product.costPrice
@@ -50,11 +52,109 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         )
       : 0;
 
-  const images = product.images.map((img: any) => img.url);
+  // 🟡 Check Wishlist & Cart Status on Mount
+  useEffect(() => {
+    if (!accessToken) return;
+
+    const checkStatus = async () => {
+      try {
+        const [wishlistRes, cartRes] = await Promise.all([
+          fetch(`${apiUrl}/wishlist/check/${product.id}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }),
+          fetch(`${apiUrl}/cart/check/${product.id}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }),
+        ]);
+
+        const wishlistData = await wishlistRes.json();
+        const cartData = await cartRes.json();
+
+        setIsWishlisted(wishlistData.inWishlist);
+        setIsInCart(cartData.inCart);
+      } catch (error) {
+        console.error("Error checking wishlist/cart status:", error);
+      }
+    };
+
+    checkStatus();
+  }, [accessToken, product.id, apiUrl]);
+
+  // 🟢 Add to Cart
+  const handleAddToCart = async () => {
+    if (!accessToken) return alert("Please log in to add to cart.");
+    setLoadingCart(true);
+    try {
+      const res = await fetch(`${apiUrl}/cart/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ productId: product.id, quantity }),
+      });
+
+      if (!res.ok) throw new Error("Failed to add to cart");
+      setIsInCart(true);
+    } catch (error) {
+      console.error("Add to cart error:", error);
+    } finally {
+      setLoadingCart(false);
+    }
+  };
+
+  // 🔴 Remove from Cart
+  const handleRemoveFromCart = async () => {
+    if (!accessToken) return alert("Please log in to remove from cart.");
+    setLoadingCart(true);
+    try {
+      const res = await fetch(`${apiUrl}/cart/remove/${product.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to remove from cart");
+      setIsInCart(false);
+    } catch (error) {
+      console.error("Remove from cart error:", error);
+    } finally {
+      setLoadingCart(false);
+    }
+  };
+
+  // 💙 Toggle Wishlist
+  const handleToggleWishlist = async () => {
+    if (!accessToken) return alert("Please log in to use wishlist.");
+    setLoadingWishlist(true);
+    try {
+      const url = isWishlisted
+        ? `${apiUrl}/wishlist/delete/${product.id}`
+        : `${apiUrl}/wishlist/add`;
+      const method = isWishlisted ? "DELETE" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: !isWishlisted ? JSON.stringify({ productId: product.id }) : null,
+      });
+
+      if (!res.ok) throw new Error("Failed to update wishlist");
+      setIsWishlisted(!isWishlisted);
+    } catch (error) {
+      console.error("Wishlist toggle error:", error);
+    } finally {
+      setLoadingWishlist(false);
+    }
+  };
 
   return (
     <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-      {/* Product Images */}
+      {/* Images */}
       <div className="space-y-4">
         <div className="relative aspect-square overflow-hidden rounded-lg border">
           <Image
@@ -68,26 +168,21 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               -{discountPercentage}%
             </Badge>
           )}
-          {product.badge && (
-            <Badge variant="secondary" className="absolute top-4 right-4">
-              {product.badge}
-            </Badge>
-          )}
         </div>
 
         <div className="flex gap-2 overflow-x-auto">
-          {images.map((image: string, index: number) => (
+          {images.map((img: string, idx: number) => (
             <button
-              key={index}
-              onClick={() => setSelectedImage(index)}
+              key={idx}
+              onClick={() => setSelectedImage(idx)}
               className={cn(
-                "flex-shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden",
-                selectedImage === index ? "border-primary" : "border-gray-200"
+                "w-20 h-20 rounded-lg border-2 overflow-hidden flex-shrink-0",
+                selectedImage === idx ? "border-primary" : "border-gray-200"
               )}
             >
               <Image
-                src={image}
-                alt={`${product.name} ${index + 1}`}
+                src={img}
+                alt={`Thumb ${idx}`}
                 width={80}
                 height={80}
                 className="w-full h-full object-cover"
@@ -102,6 +197,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         <div>
           <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
 
+          {/* Ratings */}
           <div className="flex items-center gap-2 mb-4">
             <div className="flex">
               {[...Array(5)].map((_, i) => (
@@ -117,15 +213,19 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               ))}
             </div>
             <span className="text-sm text-muted-foreground">
-              {product.averageRating ?? 0} ({product.reviewCount ?? 0} reviews)
+              {product.averageRating ?? 0} ({product.reviewCount ?? 0})
             </span>
           </div>
 
+          {/* Price */}
           <div className="flex items-center gap-3 mb-4">
-            <span className="text-3xl font-bold">${product.price}</span>
-            {product.salePrice && (
-              <span className="text-xl text-muted-foreground line-through">
-                ${product.salePrice}
+            <span className="text-3xl font-bold">${product.salePrice}</span>
+            {product.price && (
+              <span
+                className="text-xl line-through text-muted-foreground"
+                style={{ textDecorationColor: "red" }}
+              >
+                ${product.price}
               </span>
             )}
           </div>
@@ -135,7 +235,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
         {/* Quantity */}
         <div>
-          <Label className="text-base font-medium mb-3 block">Quantity</Label>
+          <Label className="text-base font-medium mb-2 block">Quantity</Label>
           <Select
             value={quantity.toString()}
             onValueChange={(val) => setQuantity(parseInt(val))}
@@ -144,7 +244,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {[...Array(Math.min(10, product.inventoryQuantity || 0))].map(
+              {[...Array(Math.min(10, product.inventoryQuantity || 1))].map(
                 (_, i) => (
                   <SelectItem key={i + 1} value={(i + 1).toString()}>
                     {i + 1}
@@ -158,21 +258,35 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           </p>
         </div>
 
-        {/* Action Buttons */}
+        {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3">
           <Button
             size="lg"
             className="flex-1"
-            onClick={handleAddToCart}
-            disabled={isAddingToCart}
+            onClick={isInCart ? handleRemoveFromCart : handleAddToCart}
+            disabled={loadingCart}
+            variant={isInCart ? "destructive" : "default"}
           >
-            <ShoppingCart className="h-5 w-5 mr-2" />
-            {isAddingToCart ? "Adding..." : "Add to Cart"}
+            {loadingCart ? (
+              "Processing..."
+            ) : isInCart ? (
+              <>
+                <X className="h-5 w-5 mr-2" />
+                Remove from Cart
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="h-5 w-5 mr-2" />
+                Add to Cart
+              </>
+            )}
           </Button>
+
           <Button
             size="lg"
             variant="outline"
-            onClick={() => setIsWishlisted(!isWishlisted)}
+            onClick={handleToggleWishlist}
+            disabled={loadingWishlist}
           >
             <Heart
               className={cn(
@@ -182,6 +296,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             />
             {isWishlisted ? "Wishlisted" : "Add to Wishlist"}
           </Button>
+
           <Button size="lg" variant="outline">
             <Share2 className="h-5 w-5 mr-2" />
             Share
@@ -208,12 +323,13 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
         <Separator />
 
-        {/* Product Details Tabs */}
+        {/* Tabs */}
         <Tabs defaultValue="features" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="features">Features</TabsTrigger>
             <TabsTrigger value="specifications">Specifications</TabsTrigger>
           </TabsList>
+
           <TabsContent value="features" className="space-y-2">
             <ul className="list-disc list-inside space-y-1">
               {product.features.map((f: any) => (
@@ -223,6 +339,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               ))}
             </ul>
           </TabsContent>
+
           <TabsContent value="specifications" className="space-y-2">
             <div className="space-y-2">
               {product.specifications.map((s: any) => (

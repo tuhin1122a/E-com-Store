@@ -1,14 +1,16 @@
 "use client";
 
+import { useSession } from "next-auth/react";
+import { useState } from "react";
+
+import { Heart, Menu, Search, ShoppingCart } from "lucide-react";
+
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-import { Heart, Menu, Search, ShoppingCart } from "lucide-react";
-import { useState } from "react";
-
-import { useSession } from "next-auth/react";
+import { useWishlist } from "@/hooks/use-wishlist";
 import Logo from "./Logo";
 import MobileMenu from "./MobileMenu";
 import NavLinks from "./NavLinks";
@@ -16,14 +18,15 @@ import SearchBar from "./SearchBar";
 import UserMenu from "./UserMenu";
 
 export default function Header() {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const { data: session } = useSession();
   const user = session?.user;
-  console.log("user..........", user);
+
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const cartItemsCount = 3;
-  const wishlistCount = 5;
+  const { items } = useWishlist();
+  const wishlistCount = items.length;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
@@ -37,6 +40,8 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between">
           <Logo />
           <NavLinks />
+
+          {/* Desktop SearchBar */}
           <SearchBar
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -44,7 +49,7 @@ export default function Header() {
           />
 
           <div className="flex items-center space-x-2">
-            {/* Mobile search icon */}
+            {/* Mobile Search Toggle */}
             <Button
               variant="ghost"
               size="icon"
@@ -54,32 +59,38 @@ export default function Header() {
               <Search className="h-5 w-5" />
             </Button>
 
-            {/* Wishlist */}
-            <Button variant="ghost" size="icon" asChild>
-              <a href="/wishlist" className="relative">
-                <Heart className="h-5 w-5" />
-                {wishlistCount > 0 && (
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center justify-center rounded-full">
-                    {wishlistCount}
-                  </Badge>
-                )}
-              </a>
-            </Button>
+            {/* Wishlist (only if logged in) */}
+            {user && (
+              <Button variant="ghost" size="icon" asChild>
+                <a href="/wishlist" className="relative">
+                  <Heart className="h-5 w-5" />
+                  {wishlistCount > 0 && (
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center bg-red-500 justify-center rounded-full">
+                      {wishlistCount}
+                    </Badge>
+                  )}
+                </a>
+              </Button>
+            )}
 
-            {/* Cart */}
-            <Button variant="ghost" size="icon" asChild>
-              <a href="/cart" className="relative">
-                <ShoppingCart className="h-5 w-5" />
-                {cartItemsCount > 0 && (
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center justify-center rounded-full">
-                    {cartItemsCount}
-                  </Badge>
-                )}
-              </a>
-            </Button>
+            {/* Cart (only if logged in) */}
+            {user && (
+              <Button variant="ghost" size="icon" asChild>
+                <a href="/cart" className="relative">
+                  <ShoppingCart className="h-5 w-5" />
+                  {cartItemsCount > 0 && (
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center justify-center rounded-full">
+                      {cartItemsCount}
+                    </Badge>
+                  )}
+                </a>
+              </Button>
+            )}
 
             <ThemeToggle />
             <UserMenu />
+
+            {/* Mobile Menu Drawer */}
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
@@ -93,7 +104,7 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile search input */}
+        {/* Mobile Search Input */}
         {isSearchOpen && (
           <div className="md:hidden py-4 border-t">
             <SearchBar

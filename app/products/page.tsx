@@ -6,7 +6,6 @@ import { Suspense } from "react";
 
 export default async function ProductsPage() {
   const productsData = await getAllProducts();
-  console.log(productsData?.products);
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col lg:flex-row gap-8">

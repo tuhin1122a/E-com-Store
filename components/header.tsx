@@ -25,7 +25,6 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const { data: session } = useSession();
   const user = session?.user;
-  console.log("user..........", user);
 
   // Mock data - replace with real data from context/store
   const cartItemsCount = 3;
