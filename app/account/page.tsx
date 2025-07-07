@@ -6,12 +6,15 @@ import { AccountOverview } from "@/app/account/components/account-overview";
 import { AccountProfile } from "@/app/account/components/account-profile";
 import { AccountSecurity } from "@/app/account/components/account-security";
 import { AccountSidebar } from "@/app/account/components/account-sidebar";
-import { useAuth } from "@/hooks/use-auth";
+import { useSession } from "next-auth/react";
+
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function AccountPage() {
-  const { user, loading } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
+  const loading = useSession().status === "loading";
   const router = useRouter();
   const [activeSection, setActiveSection] = useState("overview");
 

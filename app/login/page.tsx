@@ -1,6 +1,8 @@
 "use client";
 
-import type React from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -13,11 +15,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/hooks/use-auth";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -26,23 +25,27 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { login, user } = useAuth();
-  console.log("user..........", user);
   const router = useRouter();
+  const { data: session } = useSession();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    try {
-      await login(email, password);
+    const result = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+    });
+
+    if (result?.error) {
+      setError(result.error);
+    } else {
       router.push("/account");
-    } catch (err: any) {
-      setError(err.message || "Login failed");
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   return (
@@ -119,14 +122,6 @@ export default function LoginPage() {
                 <Link href="/register" className="text-primary hover:underline">
                   Sign up
                 </Link>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-6 border-t">
-              <div className="text-xs text-muted-foreground text-center">
-                <p>Demo Accounts:</p>
-                <p>Admin: admin@ecomstore.com / admin123</p>
-                <p>User: test@example.com / test123</p>
               </div>
             </div>
           </CardContent>

@@ -4,10 +4,11 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useAuth } from "@/hooks/use-auth";
+
 import { Heart, Menu, Search, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 
+import { useSession } from "next-auth/react";
 import Logo from "./Logo";
 import MobileMenu from "./MobileMenu";
 import NavLinks from "./NavLinks";
@@ -17,7 +18,9 @@ import UserMenu from "./UserMenu";
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { user } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
+  console.log("user..........", user);
 
   const cartItemsCount = 3;
   const wishlistCount = 5;
@@ -76,7 +79,7 @@ export default function Header() {
             </Button>
 
             <ThemeToggle />
-            <UserMenu user={user} />
+            <UserMenu />
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">

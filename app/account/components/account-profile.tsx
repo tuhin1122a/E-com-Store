@@ -1,49 +1,51 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useAuth } from "@/hooks/use-auth"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Camera, Save } from "lucide-react"
+import { useState } from "react";
+
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Camera, Save } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export function AccountProfile() {
-  const { user } = useAuth()
+  const { data: session } = useSession();
+  const user = session?.user;
   const [formData, setFormData] = useState({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
     email: user?.email || "",
     phone: user?.phone || "",
     dateOfBirth: user?.dateOfBirth || "",
-  })
-  const [isEditing, setIsEditing] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [message, setMessage] = useState("")
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSaving(true)
+    e.preventDefault();
+    setIsSaving(true);
 
     try {
       // API call to update profile
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Mock API call
-      setMessage("Profile updated successfully!")
-      setIsEditing(false)
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Mock API call
+      setMessage("Profile updated successfully!");
+      setIsEditing(false);
     } catch (error) {
-      setMessage("Failed to update profile. Please try again.")
+      setMessage("Failed to update profile. Please try again.");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -61,7 +63,10 @@ export function AccountProfile() {
         <CardContent>
           <div className="flex items-center gap-6">
             <Avatar className="h-24 w-24">
-              <AvatarImage src={user?.avatarUrl || "/placeholder.svg"} alt={user?.firstName} />
+              <AvatarImage
+                src={user?.avatarUrl || "/placeholder.svg"}
+                alt={user?.firstName}
+              />
               <AvatarFallback className="text-2xl">
                 {user?.firstName?.charAt(0)}
                 {user?.lastName?.charAt(0)}
@@ -72,7 +77,9 @@ export function AccountProfile() {
                 <Camera className="h-4 w-4 mr-2" />
                 Change Photo
               </Button>
-              <p className="text-sm text-muted-foreground mt-2">JPG, PNG or GIF. Max size 2MB.</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                JPG, PNG or GIF. Max size 2MB.
+              </p>
             </div>
           </div>
         </CardContent>
@@ -96,7 +103,9 @@ export function AccountProfile() {
                 <Input
                   id="firstName"
                   value={formData.firstName}
-                  onChange={(e) => handleInputChange("firstName", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("firstName", e.target.value)
+                  }
                   disabled={!isEditing}
                 />
               </div>
@@ -105,7 +114,9 @@ export function AccountProfile() {
                 <Input
                   id="lastName"
                   value={formData.lastName}
-                  onChange={(e) => handleInputChange("lastName", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("lastName", e.target.value)
+                  }
                   disabled={!isEditing}
                 />
               </div>
@@ -139,7 +150,9 @@ export function AccountProfile() {
                   id="dateOfBirth"
                   type="date"
                   value={formData.dateOfBirth}
-                  onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("dateOfBirth", e.target.value)
+                  }
                   disabled={!isEditing}
                 />
               </div>
@@ -151,7 +164,11 @@ export function AccountProfile() {
                   <Save className="h-4 w-4 mr-2" />
                   {isSaving ? "Saving..." : "Save Changes"}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                >
                   Cancel
                 </Button>
               </div>
@@ -160,5 +177,5 @@ export function AccountProfile() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -5,11 +5,12 @@ import HeroSection from "@/components/hero/HeroSection";
 import { ProductCardSkeleton } from "@/app/category/components/product-card-skeleton";
 import { NewsletterSignup } from "@/components/newsletter-signup";
 import apiClient from "@/lib/api";
+import { getFeaturedProducts } from "@/utility/get-featured-products";
 import { Suspense } from "react";
 
 export default async function HomePage() {
+  const featuredProduct = await getFeaturedProducts();
   const categoryData = await apiClient.getCategories();
-  console.log(categoryData);
   return (
     <div className="min-h-screen">
       <HeroSection />
@@ -29,7 +30,7 @@ export default async function HomePage() {
             Featured Products
           </h2>
           <Suspense fallback={<ProductCardSkeleton count={8} />}>
-            <FeaturedProducts />
+            <FeaturedProducts products={featuredProduct?.data} />
           </Suspense>
         </div>
       </section>

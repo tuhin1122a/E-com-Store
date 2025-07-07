@@ -1,9 +1,12 @@
 import { ProductGridSkeleton } from "@/app/category/components/product-grid-skeleton";
 import { ProductFilters } from "@/components/product-filters";
 import { ProductGrid } from "@/components/product-grid";
+import { getAllProducts } from "@/utility/getAllProducts";
 import { Suspense } from "react";
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  const productsData = await getAllProducts();
+  console.log(productsData?.products);
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col lg:flex-row gap-8">
@@ -22,7 +25,7 @@ export default function ProductsPage() {
           </div>
 
           <Suspense fallback={<ProductGridSkeleton />}>
-            <ProductGrid />
+            <ProductGrid products={productsData?.products} />
           </Suspense>
         </div>
       </div>

@@ -7,8 +7,9 @@ import { PaymentForm } from "@/app/checkout/components/payment-form";
 import { ShippingForm } from "@/app/checkout/components/shipping-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAuth } from "@/hooks/use-auth";
+
 import { apiClient } from "@/lib/api";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -33,7 +34,9 @@ interface CheckoutData {
 }
 
 export default function CheckoutPage() {
-  const { user } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
+  const loading = useSession().status === "loading";
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);

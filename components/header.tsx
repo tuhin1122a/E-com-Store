@@ -16,13 +16,15 @@ import Link from "next/link";
 import { useState } from "react";
 
 // Add the ThemeToggle import at the top
-import { useAuth } from "@/hooks/use-auth";
+
+import { useSession } from "next-auth/react";
 import { ThemeToggle } from "./theme-toggle";
 
 export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { user, logout } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
   console.log("user..........", user);
 
   // Mock data - replace with real data from context/store

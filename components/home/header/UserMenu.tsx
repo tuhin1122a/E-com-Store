@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -6,23 +8,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/hooks/use-auth";
 import { User } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function UserMenu({ user }: { user: any }) {
-  const { logout } = useAuth();
-  console.log(user);
+export default function UserMenu() {
+  const { data: session } = useSession();
+  const user = session?.user;
 
-  // Helper: render avatar content
+  const handleLogout = () => {
+    signOut({ callbackUrl: "/login" }); // Redirects to login page after logout
+  };
+
   const renderAvatar = () => {
-    if (user?.avatarUrl) {
+    if (user?.image) {
       return (
         <div className="h-8 w-8 rounded-full overflow-hidden">
           <Image
-            src={user.avatarUrl}
-            alt={user.firstName || "User"}
+            src={user.image}
+            alt={user.name || "User"}
             width={32}
             height={32}
             className="h-full w-full object-cover"
@@ -31,7 +36,7 @@ export default function UserMenu({ user }: { user: any }) {
       );
     }
 
-    const initial = user?.firstName?.[0]?.toUpperCase() || "?";
+    const initial = user?.name?.[0]?.toUpperCase() || "?";
     return (
       <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted text-sm font-semibold uppercase">
         {initial}
@@ -60,7 +65,7 @@ export default function UserMenu({ user }: { user: any }) {
               <Link href="/wishlist">Wishlist</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
           </>
         ) : (
           <>

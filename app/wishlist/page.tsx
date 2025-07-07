@@ -1,117 +1,138 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { WishlistItem } from "@/components/wishlist-item"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Heart, ShoppingCart, Trash2, Share2 } from "lucide-react"
-import { useAuth } from "@/hooks/use-auth"
-import { apiClient } from "@/lib/api"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { WishlistItem } from "@/components/wishlist-item";
+import { Heart, Share2, ShoppingCart, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+
+import { apiClient } from "@/lib/api";
+import { useSession } from "next-auth/react";
 
 interface WishlistProduct {
-  id: string
-  productId: string
+  id: string;
+  productId: string;
   product: {
-    id: string
-    name: string
-    price: number
-    originalPrice?: number
-    image: string
-    rating: number
-    reviewCount: number
-    isOnSale: boolean
-    badge?: string
-    inStock: boolean
-  }
-  createdAt: string
+    id: string;
+    name: string;
+    price: number;
+    originalPrice?: number;
+    image: string;
+    rating: number;
+    reviewCount: number;
+    isOnSale: boolean;
+    badge?: string;
+    inStock: boolean;
+  };
+  createdAt: string;
 }
 
 export default function WishlistPage() {
-  const { user } = useAuth()
-  const [wishlistItems, setWishlistItems] = useState<WishlistProduct[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedItems, setSelectedItems] = useState<string[]>([])
+  const { data: session } = useSession();
+  const user = session?.user;
+  const loading = useSession().status === "loading";
+  const [wishlistItems, setWishlistItems] = useState<WishlistProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   useEffect(() => {
     if (user) {
-      fetchWishlist()
+      fetchWishlist();
     } else {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [user])
+  }, [user]);
 
   const fetchWishlist = async () => {
     try {
-      const response = await apiClient.getWishlist()
-      setWishlistItems(response)
+      const response = await apiClient.getWishlist();
+      setWishlistItems(response);
     } catch (error) {
-      console.error("Failed to fetch wishlist:", error)
+      console.error("Failed to fetch wishlist:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleRemoveItem = async (productId: string) => {
     try {
-      await apiClient.removeFromWishlist(productId)
-      setWishlistItems((items) => items.filter((item) => item.productId !== productId))
-      setSelectedItems((selected) => selected.filter((id) => id !== productId))
+      await apiClient.removeFromWishlist(productId);
+      setWishlistItems((items) =>
+        items.filter((item) => item.productId !== productId)
+      );
+      setSelectedItems((selected) => selected.filter((id) => id !== productId));
     } catch (error) {
-      console.error("Failed to remove from wishlist:", error)
+      console.error("Failed to remove from wishlist:", error);
     }
-  }
+  };
 
   const handleAddToCart = async (productId: string) => {
     try {
-      await apiClient.addToCart({ productId, quantity: 1 })
+      await apiClient.addToCart({ productId, quantity: 1 });
       // Optionally remove from wishlist after adding to cart
       // handleRemoveItem(productId)
     } catch (error) {
-      console.error("Failed to add to cart:", error)
+      console.error("Failed to add to cart:", error);
     }
-  }
+  };
 
   const handleSelectItem = (productId: string) => {
     setSelectedItems((prev) =>
-      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId],
-    )
-  }
+      prev.includes(productId)
+        ? prev.filter((id) => id !== productId)
+        : [...prev, productId]
+    );
+  };
 
   const handleSelectAll = () => {
     if (selectedItems.length === wishlistItems.length) {
-      setSelectedItems([])
+      setSelectedItems([]);
     } else {
-      setSelectedItems(wishlistItems.map((item) => item.productId))
+      setSelectedItems(wishlistItems.map((item) => item.productId));
     }
-  }
+  };
 
   const handleRemoveSelected = async () => {
     try {
-      await Promise.all(selectedItems.map((productId) => apiClient.removeFromWishlist(productId)))
-      setWishlistItems((items) => items.filter((item) => !selectedItems.includes(item.productId)))
-      setSelectedItems([])
+      await Promise.all(
+        selectedItems.map((productId) =>
+          apiClient.removeFromWishlist(productId)
+        )
+      );
+      setWishlistItems((items) =>
+        items.filter((item) => !selectedItems.includes(item.productId))
+      );
+      setSelectedItems([]);
     } catch (error) {
-      console.error("Failed to remove selected items:", error)
+      console.error("Failed to remove selected items:", error);
     }
-  }
+  };
 
   const handleAddSelectedToCart = async () => {
     try {
-      await Promise.all(selectedItems.map((productId) => apiClient.addToCart({ productId, quantity: 1 })))
+      await Promise.all(
+        selectedItems.map((productId) =>
+          apiClient.addToCart({ productId, quantity: 1 })
+        )
+      );
       // Optionally remove from wishlist after adding to cart
     } catch (error) {
-      console.error("Failed to add selected items to cart:", error)
+      console.error("Failed to add selected items to cart:", error);
     }
-  }
+  };
 
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-md mx-auto text-center">
           <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h1 className="text-2xl font-bold mb-2">Sign in to view your wishlist</h1>
-          <p className="text-muted-foreground mb-6">Save your favorite items and access them from any device.</p>
+          <h1 className="text-2xl font-bold mb-2">
+            Sign in to view your wishlist
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            Save your favorite items and access them from any device.
+          </p>
           <div className="space-y-3">
             <Button asChild className="w-full">
               <Link href="/login">Sign In</Link>
@@ -122,7 +143,7 @@ export default function WishlistPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (loading) {
@@ -137,7 +158,7 @@ export default function WishlistPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -146,7 +167,8 @@ export default function WishlistPage() {
         <div>
           <h1 className="text-3xl font-bold">My Wishlist</h1>
           <p className="text-muted-foreground">
-            {wishlistItems.length} {wishlistItems.length === 1 ? "item" : "items"} saved
+            {wishlistItems.length}{" "}
+            {wishlistItems.length === 1 ? "item" : "items"} saved
           </p>
         </div>
 
@@ -164,7 +186,9 @@ export default function WishlistPage() {
         <Card>
           <CardContent className="py-16 text-center">
             <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">Your wishlist is empty</h3>
+            <h3 className="text-xl font-semibold mb-2">
+              Your wishlist is empty
+            </h3>
             <p className="text-muted-foreground mb-6">
               Save items you love to your wishlist and never lose track of them.
             </p>
@@ -186,17 +210,27 @@ export default function WishlistPage() {
                     onChange={handleSelectAll}
                     className="rounded"
                   />
-                  <span className="text-sm">Select All ({selectedItems.length} selected)</span>
+                  <span className="text-sm">
+                    Select All ({selectedItems.length} selected)
+                  </span>
                 </label>
               </div>
 
               {selectedItems.length > 0 && (
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={handleAddSelectedToCart}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddSelectedToCart}
+                  >
                     <ShoppingCart className="h-4 w-4 mr-2" />
                     Add to Cart ({selectedItems.length})
                   </Button>
-                  <Button variant="outline" size="sm" onClick={handleRemoveSelected}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRemoveSelected}
+                  >
                     <Trash2 className="h-4 w-4 mr-2" />
                     Remove ({selectedItems.length})
                   </Button>
@@ -221,5 +255,5 @@ export default function WishlistPage() {
         </>
       )}
     </div>
-  )
+  );
 }

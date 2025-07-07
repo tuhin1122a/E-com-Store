@@ -1,57 +1,60 @@
-"use client"
+"use client";
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { Heart, ShoppingCart, Star } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import { useState } from "react"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { Heart, ShoppingCart, Star } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 
 interface Product {
-  id: string
-  name: string
-  price: number
-  originalPrice?: number
-  image: string
-  rating: number
-  reviewCount: number
-  isOnSale: boolean
-  badge?: string
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  costPrice: number;
+  images: { url: string }[];
+  averageRating: number;
+  reviewCount: number;
 }
 
 interface ProductCardProps {
-  product: Product
+  product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false)
-  const [isAddingToCart, setIsAddingToCart] = useState(false)
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const handleAddToCart = async () => {
-    setIsAddingToCart(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    setIsAddingToCart(false)
+    setIsAddingToCart(true);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    setIsAddingToCart(false);
     // Add to cart logic here
-  }
+  };
 
   const handleToggleWishlist = () => {
-    setIsWishlisted(!isWishlisted)
+    setIsWishlisted(!isWishlisted);
     // Add to wishlist logic here
-  }
+  };
 
-  const discountPercentage = product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : 0
+  const discountPercentage =
+    product.costPrice > product.price
+      ? Math.round(
+          ((product.costPrice - product.price) / product.costPrice) * 100
+        )
+      : 0;
+
+  const imageUrl = product.images?.[0]?.url || "/placeholder.svg";
 
   return (
     <Card className="group hover:shadow-lg transition-shadow duration-300">
       <div className="relative overflow-hidden">
-        <Link href={`/product/${product.id}`}>
+        <Link href={`/product/${product.slug}`}>
           <Image
-            src={product.image || "/placeholder.svg"}
+            src={imageUrl}
             alt={product.name}
             width={300}
             height={300}
@@ -61,14 +64,9 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {product.isOnSale && discountPercentage > 0 && (
+          {discountPercentage > 0 && (
             <Badge variant="destructive" className="text-xs">
               -{discountPercentage}%
-            </Badge>
-          )}
-          {product.badge && (
-            <Badge variant="secondary" className="text-xs">
-              {product.badge}
             </Badge>
           )}
         </div>
@@ -80,12 +78,21 @@ export function ProductCard({ product }: ProductCardProps) {
           className="absolute top-2 right-2 bg-white/80 hover:bg-white"
           onClick={handleToggleWishlist}
         >
-          <Heart className={cn("h-4 w-4", isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600")} />
+          <Heart
+            className={cn(
+              "h-4 w-4",
+              isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"
+            )}
+          />
         </Button>
 
-        {/* Quick add to cart */}
+        {/* Add to cart */}
         <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Button className="w-full" onClick={handleAddToCart} disabled={isAddingToCart}>
+          <Button
+            className="w-full"
+            onClick={handleAddToCart}
+            disabled={isAddingToCart}
+          >
             <ShoppingCart className="h-4 w-4 mr-2" />
             {isAddingToCart ? "Adding..." : "Add to Cart"}
           </Button>
@@ -93,8 +100,10 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
 
       <CardContent className="p-4">
-        <Link href={`/product/${product.id}`}>
-          <h3 className="font-semibold text-sm mb-2 line-clamp-2 hover:text-primary">{product.name}</h3>
+        <Link href={`/product/${product.slug}`}>
+          <h3 className="font-semibold text-sm mb-2 line-clamp-2 hover:text-primary">
+            {product.name}
+          </h3>
         </Link>
 
         {/* Rating */}
@@ -105,22 +114,28 @@ export function ProductCard({ product }: ProductCardProps) {
                 key={i}
                 className={cn(
                   "h-3 w-3",
-                  i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300",
+                  i < Math.floor(product.averageRating)
+                    ? "fill-yellow-400 text-yellow-400"
+                    : "text-gray-300"
                 )}
               />
             ))}
           </div>
-          <span className="text-xs text-muted-foreground">({product.reviewCount})</span>
+          <span className="text-xs text-muted-foreground">
+            ({product.reviewCount})
+          </span>
         </div>
 
         {/* Price */}
         <div className="flex items-center gap-2">
           <span className="font-bold text-lg">${product.price}</span>
-          {product.originalPrice && (
-            <span className="text-sm text-muted-foreground line-through">${product.originalPrice}</span>
+          {product.costPrice > product.price && (
+            <span className="text-sm text-muted-foreground line-through">
+              ${product.costPrice}
+            </span>
           )}
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

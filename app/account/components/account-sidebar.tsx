@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAuth } from "@/hooks/use-auth";
+
 import { cn } from "@/lib/utils";
 import {
   BarChart3,
@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   User,
 } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 
 interface AccountSidebarProps {
   activeSection: string;
@@ -31,7 +32,12 @@ export function AccountSidebar({
   activeSection,
   onSectionChange,
 }: AccountSidebarProps) {
-  const { user, logout } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
+
+  const handleLogout = () => {
+    signOut({ callbackUrl: "/login" }); // ✅ Redirects to login page after logout
+  };
 
   return (
     <Card className="shadow-xl rounded-xl border border-border">
@@ -40,18 +46,17 @@ export function AccountSidebar({
         <div className="flex items-center gap-4 mb-6 pb-6 border-b">
           <Avatar className="h-14 w-14 ring-2 ring-primary/30 hover:ring-primary transition-all">
             <AvatarImage
-              src={user?.avatarUrl || "/placeholder.svg"}
-              alt={user?.firstName}
+              src={user?.image || "/placeholder.svg"}
+              alt={user?.name || "User"}
               className="object-cover"
             />
             <AvatarFallback className="bg-muted text-primary font-semibold">
-              {user?.firstName?.charAt(0)}
-              {user?.lastName?.charAt(0)}
+              {user?.name?.charAt(0)}
             </AvatarFallback>
           </Avatar>
           <div>
             <h3 className="font-semibold text-lg leading-tight">
-              {user?.firstName} {user?.lastName}
+              {user?.name}
             </h3>
             <p className="text-sm text-muted-foreground">{user?.email}</p>
           </div>
@@ -93,7 +98,7 @@ export function AccountSidebar({
             variant="ghost"
             size="sm"
             className="w-full flex items-center gap-3 justify-start text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            onClick={logout}
+            onClick={handleLogout}
           >
             <LogOut className="h-4 w-4" />
             Logout
