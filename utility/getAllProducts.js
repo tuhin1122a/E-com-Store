@@ -5,15 +5,18 @@ export async function getAllProducts() {
       headers: {
         "Content-Type": "application/json",
       },
-      cache: "no-store", // ✅ No cache
+      // ✅ Enable ISR: revalidate every 60 seconds
+      next: { revalidate: 60 },
     });
 
     if (!res.ok) {
-      throw new Error("Failed to fetch products");
+      throw new Error(
+        `Failed to fetch products: ${res.status} ${res.statusText}`
+      );
     }
 
     const data = await res.json();
-    return data.data;
+    return data.data; // Assuming your API returns { data: [...] }
   } catch (error) {
     console.error("getAllProducts error:", error);
     return null;

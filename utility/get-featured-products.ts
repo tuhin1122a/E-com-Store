@@ -4,7 +4,7 @@ export async function getFeaturedProducts() {
       `${process.env.NEXT_PUBLIC_API_URL}/products/featured`,
       {
         method: "GET",
-        cache: "no-store", // no caching
+        next: { revalidate: 60 }, // ✅ SSG + ISR compatible
       }
     );
 
