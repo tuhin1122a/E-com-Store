@@ -78,7 +78,7 @@ export function CartSummary({ items }) {
         throw new Error("Failed to save cart summary");
       }
 
-      router.push("/checkout");
+      router.push(`/checkout/${cartId}`);
     } catch (error) {
       console.error("Checkout error:", error);
       alert("Failed to proceed to checkout.");

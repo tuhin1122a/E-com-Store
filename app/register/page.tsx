@@ -35,8 +35,6 @@ export default function RegisterPage() {
 
   const { data: session } = useSession();
   const user = session?.user;
-  const loading = useSession().status === "loading";
-  const { register } = useAuth(); // Assuming you have a register function in your auth
   // context or hook to handle registration
   const router = useRouter();
 
@@ -60,20 +58,39 @@ export default function RegisterPage() {
       setError("Password must be at least 6 characters long");
       return;
     }
+    console.log("fromJSON", formData);
 
     setLoading(true);
 
     try {
-      await register({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone || undefined,
-        password: formData.password,
-      });
-      router.push("/account");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phone: formData.phone || undefined,
+            password: formData.password,
+          }),
+        }
+      );
+
+      const data = await res.json();
+      console.log("🚨 Registration error response:", data);
+
+      if (!res.ok) {
+        throw new Error(data.message || "Registration failed");
+      }
+
+      // Optionally redirect to login or account page
+      router.push("/account"); // or "/login" if you want them to login after registration
     } catch (err: any) {
-      setError(err.message || "Registration failed");
+      setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }

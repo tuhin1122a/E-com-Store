@@ -33,7 +33,7 @@ interface CheckoutData {
   sameAsBilling: boolean;
 }
 
-export default function CheckoutPage() {
+export default function CheckoutPage({ params }: { params: { id: string } }) {
   const { data: session } = useSession();
   const user = session?.user;
   const router = useRouter();
