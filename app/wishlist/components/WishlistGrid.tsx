@@ -29,6 +29,8 @@ export function WishlistGrid({
           onSelect={() => onSelectItem(item.productId)}
           onRemove={() => onRemoveItem(item.productId)}
           onAddToCart={() => onAddToCart(item.productId)}
+          addSelectedToCart={addSelectedToCart}
+          isAllSelected={isAllSelected}
         />
       ))}
     </div>
