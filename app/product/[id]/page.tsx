@@ -1,9 +1,9 @@
-import { ProductDetails } from "@/app/product/components/product-details";
 import { ProductDetailsSkeleton } from "@/app/product/components/product-details-skeleton";
 import { ProductReviews } from "@/app/product/components/product-reviews";
 import { RelatedProducts } from "@/app/product/components/related-products";
 import { fetchProductById } from "@/utility/fetchProductById";
 import { Suspense } from "react";
+import { ProductDetails } from "../components/product-details/product-details";
 
 interface ProductPageProps {
   params: {

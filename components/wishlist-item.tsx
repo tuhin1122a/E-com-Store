@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Share2, ShoppingCart, Star, Trash2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface WishlistItemProps {
   item: {
@@ -38,16 +39,75 @@ export function WishlistItem({
   onRemove,
   onAddToCart,
 }: WishlistItemProps) {
+  const { data: session } = useSession();
+  const accessToken = session?.user?.accessToken;
+
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isRemovingFromCart, setIsRemovingFromCart] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
+
   const { product } = item;
+
+  const productImage = product.images?.[0]?.url || "/placeholder.svg";
+  const inStock =
+    product.status === "IN_STOCK" || product.status === "LOW_STOCK";
+  const reviewCount = product.reviews?.length || 0;
+  const discountPercentage =
+    product.salePrice && product.price
+      ? Math.round(((product.price - product.salePrice) / product.price) * 100)
+      : 0;
+
+  // ✅ Check if item is in cart
+  useEffect(() => {
+    if (!accessToken) return;
+    const checkCart = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/cart/check/${product.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        const data = await res.json();
+        setIsInCart(data.inCart);
+      } catch (err) {
+        console.error("Error checking cart:", err);
+      }
+    };
+
+    checkCart();
+  }, [accessToken, product.id]);
 
   const handleAddToCart = async () => {
     setIsAddingToCart(true);
     try {
       await onAddToCart();
+      setIsInCart(true);
     } finally {
       setIsAddingToCart(false);
+    }
+  };
+
+  const handleRemoveFromCart = async () => {
+    setIsRemovingFromCart(true);
+    try {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/cart/remove/${product.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      setIsInCart(false);
+    } catch (err) {
+      console.error("Failed to remove from cart", err);
+    } finally {
+      setIsRemovingFromCart(false);
     }
   };
 
@@ -65,17 +125,6 @@ export function WishlistItem({
     }
   };
 
-  const discountPercentage =
-    product.salePrice && product.price
-      ? Math.round(((product.price - product.salePrice) / product.price) * 100)
-      : 0;
-
-  const productImage = product.images?.[0]?.url || "/placeholder.svg";
-  const inStock =
-    product.status === "IN_STOCK" || product.status === "LOW_STOCK";
-  const rating = 0; // Placeholder
-  const reviewCount = product.reviews?.length || 0;
-
   return (
     <Card className="group relative hover:shadow-lg transition-shadow duration-300">
       {isSelected && (
@@ -88,7 +137,7 @@ export function WishlistItem({
             type="checkbox"
             checked={isSelected}
             onChange={onSelect}
-            className="w-5 h-5 rounded border border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-400"
+            className="w-5 h-5 rounded border border-gray-300 text-blue-600"
             aria-label="Select wishlist item"
           />
         </div>
@@ -116,7 +165,6 @@ export function WishlistItem({
           )}
         </div>
 
-        {/* Remove button */}
         <Button
           variant="ghost"
           size="icon"
@@ -127,7 +175,6 @@ export function WishlistItem({
           <Trash2 className="h-4 w-4 text-red-500" />
         </Button>
 
-        {/* Share button */}
         <Button
           variant="ghost"
           size="icon"
@@ -136,23 +183,33 @@ export function WishlistItem({
           disabled={isCopying}
           aria-label="Share wishlist item"
         >
-          {/* You can use an icon from lucide-react or any icon library */}
           <Share2 className="h-4 w-4 text-blue-500" />
         </Button>
 
         <div className="absolute bottom-2 left-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Button
-            className="w-full"
-            onClick={handleAddToCart}
-            disabled={isAddingToCart || !inStock}
-          >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            {isAddingToCart
-              ? "Adding..."
-              : inStock
-                ? "Add to Cart"
-                : "Out of Stock"}
-          </Button>
+          {isInCart ? (
+            <Button
+              className="w-full bg-destructive hover:bg-destructive/90"
+              onClick={handleRemoveFromCart}
+              disabled={isRemovingFromCart}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {isRemovingFromCart ? "Removing..." : "Remove from Cart"}
+            </Button>
+          ) : (
+            <Button
+              className="w-full"
+              onClick={handleAddToCart}
+              disabled={isAddingToCart || !inStock}
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              {isAddingToCart
+                ? "Adding..."
+                : inStock
+                  ? "Add to Cart"
+                  : "Out of Stock"}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -170,9 +227,7 @@ export function WishlistItem({
                 key={i}
                 className={cn(
                   "h-3 w-3",
-                  i < Math.floor(rating)
-                    ? "fill-yellow-400 text-yellow-400"
-                    : "text-gray-300"
+                  i < 0 ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
                 )}
               />
             ))}
@@ -181,8 +236,10 @@ export function WishlistItem({
         </div>
 
         <div className="flex items-center gap-2 mb-2">
-          <span className="font-bold text-lg">${product.salePrice}</span>
-          {product.price && (
+          <span className="font-bold text-lg">
+            ${product.salePrice || product.price}
+          </span>
+          {product.salePrice && (
             <span className="text-sm text-muted-foreground line-through">
               ${product.price}
             </span>

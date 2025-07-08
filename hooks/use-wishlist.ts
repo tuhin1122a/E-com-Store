@@ -63,7 +63,7 @@ export function useWishlist() {
 
   const addToCart = async (productId: string) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -112,21 +112,75 @@ export function useWishlist() {
   };
 
   const addSelectedToCart = async () => {
+    if (!accessToken) {
+      alert("You must be logged in.");
+      return;
+    }
+
     try {
-      await Promise.all(
-        selectedItems.map((id) =>
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart`, {
+      // Step 1: Filter only items that are not in cart
+      const filteredItems: string[] = [];
+
+      for (const productId of selectedItems) {
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/cart/check/${productId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }
+          );
+
+          if (!res.ok) {
+            console.warn(`Cart check failed for ${productId}`);
+            continue;
+          }
+
+          const data = await res.json();
+
+          if (!data.inCart) {
+            filteredItems.push(productId);
+          }
+        } catch (err) {
+          console.error("Error checking cart for:", productId, err);
+        }
+      }
+
+      if (filteredItems.length === 0) {
+        alert("All selected items are already in your cart.");
+        return;
+      }
+
+      // Step 2: Add filtered items to cart
+      const results = await Promise.all(
+        filteredItems.map((productId) =>
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/add`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${accessToken}`,
             },
-            body: JSON.stringify({ productId: id, quantity: 1 }),
+            body: JSON.stringify({ productId, quantity: 1 }),
+          }).then(async (res) => {
+            if (!res.ok) {
+              const errorData = await res.json().catch(() => ({}));
+              throw new Error(
+                `Failed to add ${productId}: ${
+                  errorData.message || res.statusText
+                }`
+              );
+            }
+            return res.json();
           })
         )
       );
+
+      console.log("Added to cart:", results);
+      alert("Selected items added to cart.");
     } catch (error) {
       console.error("Failed to add selected items to cart:", error);
+      alert("Something went wrong while adding to cart.");
     }
   };
 

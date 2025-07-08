@@ -216,3 +216,33 @@ class ApiClient {
 // ✅ Export singleton
 export const apiClient = new ApiClient(API_BASE_URL);
 export default apiClient;
+// lib/api.ts
+export async function checkWishlist(
+  productId: string,
+  token: string
+): Promise<boolean> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/wishlist/check/${productId}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    }
+  );
+  const data = await res.json();
+  return data.inWishlist;
+}
+
+export async function checkCart(
+  productId: string,
+  token: string
+): Promise<boolean> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/cart/check/${productId}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    }
+  );
+  const data = await res.json();
+  return data.inCart;
+}
