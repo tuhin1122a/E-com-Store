@@ -29,6 +29,7 @@ export function ProductInteraction({ product }: ProductInteractionProps) {
     removeFromWishlist,
     isInWishlist,
   } = useWishlist();
+  console.error("Cart items:", cartItems);
 
   // Local state for quantity & loading
   const [quantity, setQuantity] = useState(1);
