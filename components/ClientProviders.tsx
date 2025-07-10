@@ -1,5 +1,7 @@
 "use client";
 
+import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 import { SessionProvider } from "next-auth/react";
 
 export default function ClientProviders({
@@ -7,5 +9,11 @@ export default function ClientProviders({
 }: {
   children: React.ReactNode;
 }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider>
+      <WishlistProvider>
+        <CartProvider>{children}</CartProvider>
+      </WishlistProvider>
+    </SessionProvider>
+  );
 }

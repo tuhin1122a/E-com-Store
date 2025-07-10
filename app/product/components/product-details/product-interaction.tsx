@@ -1,5 +1,4 @@
-// @/components/product/product-interaction.tsx
-"use client"; // ✨ CLIENT COMPONENT
+"use client";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -12,102 +11,72 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Heart, Share2, ShoppingCart, X } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { useState } from "react";
 
+import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
+
 interface ProductInteractionProps {
-  product: any; // Tip: Define a proper type
-  initialIsWishlisted: boolean;
-  initialIsInCart: boolean;
+  product: any; // Ideally, define a proper type
 }
 
-export function ProductInteraction({
-  product,
-  initialIsWishlisted,
-  initialIsInCart,
-}: ProductInteractionProps) {
-  const { data: session } = useSession();
-  const accessToken = session?.user?.accessToken;
+export function ProductInteraction({ product }: ProductInteractionProps) {
+  // Contexts
+  const { cartItems, addToCart, removeFromCart, isInCart } = useCart();
+  const {
+    items: wishlistItems,
+    addToWishlist,
+    removeFromWishlist,
+    isInWishlist,
+  } = useWishlist();
 
-  // Initialize state from server-provided props
+  // Local state for quantity & loading
   const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(initialIsWishlisted);
-  const [isInCart, setIsInCart] = useState(initialIsInCart);
   const [loadingCart, setLoadingCart] = useState(false);
   const [loadingWishlist, setLoadingWishlist] = useState(false);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  // Check if product is in cart or wishlist from context
+  const inCart = isInCart(product.id);
+  const inWishlist = isInWishlist(product.id);
 
-  // 🟢 Add to Cart Logic
+  // Add to Cart
   const handleAddToCart = async () => {
-    if (!accessToken) return alert("Please log in to add to cart.");
     setLoadingCart(true);
     try {
-      const res = await fetch(`${apiUrl}/cart/add`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ productId: product.id, quantity }),
-      });
-
-      if (!res.ok) throw new Error("Failed to add to cart");
-      setIsInCart(true);
+      await addToCart({ id: product.id, quantity });
     } catch (error) {
       console.error("Add to cart error:", error);
-      // Optionally, show an error toast to the user
+      alert("Failed to add to cart.");
     } finally {
       setLoadingCart(false);
     }
   };
 
-  // 🔴 Remove from Cart Logic
+  // Remove from Cart
   const handleRemoveFromCart = async () => {
-    if (!accessToken) return alert("Please log in to remove from cart.");
     setLoadingCart(true);
     try {
-      const res = await fetch(`${apiUrl}/cart/remove/${product.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!res.ok) throw new Error("Failed to remove from cart");
-      setIsInCart(false);
+      await removeFromCart(product.id);
     } catch (error) {
       console.error("Remove from cart error:", error);
-      // Optionally, show an error toast to the user
+      alert("Failed to remove from cart.");
     } finally {
       setLoadingCart(false);
     }
   };
 
-  // 💙 Toggle Wishlist Logic
+  // Toggle Wishlist
   const handleToggleWishlist = async () => {
-    if (!accessToken) return alert("Please log in to use wishlist.");
     setLoadingWishlist(true);
     try {
-      const url = isWishlisted
-        ? `${apiUrl}/wishlist/delete/${product.id}`
-        : `${apiUrl}/wishlist/add`;
-      const method = isWishlisted ? "DELETE" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: !isWishlisted ? JSON.stringify({ productId: product.id }) : null,
-      });
-
-      if (!res.ok) throw new Error("Failed to update wishlist");
-      setIsWishlisted(!isWishlisted);
+      if (inWishlist) {
+        await removeFromWishlist(product.id);
+      } else {
+        await addToWishlist(product.id);
+      }
     } catch (error) {
       console.error("Wishlist toggle error:", error);
-      // Optionally, show an error toast to the user
+      alert("Failed to update wishlist.");
     } finally {
       setLoadingWishlist(false);
     }
@@ -141,17 +110,17 @@ export function ProductInteraction({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 mt-4">
         <Button
           size="lg"
           className="flex-1"
-          onClick={isInCart ? handleRemoveFromCart : handleAddToCart}
+          onClick={inCart ? handleRemoveFromCart : handleAddToCart}
           disabled={loadingCart || product.inventoryQuantity < 1}
-          variant={isInCart ? "destructive" : "default"}
+          variant={inCart ? "destructive" : "default"}
         >
           {loadingCart ? (
             "Processing..."
-          ) : isInCart ? (
+          ) : inCart ? (
             <>
               <X className="h-5 w-5 mr-2" />
               Remove from Cart
@@ -163,6 +132,7 @@ export function ProductInteraction({
             </>
           )}
         </Button>
+
         <Button
           size="lg"
           variant="outline"
@@ -172,11 +142,12 @@ export function ProductInteraction({
           <Heart
             className={cn(
               "h-5 w-5 mr-2",
-              isWishlisted ? "fill-red-500 text-red-500" : ""
+              inWishlist ? "fill-red-500 text-red-500" : ""
             )}
           />
-          {isWishlisted ? "Wishlisted" : "Add to Wishlist"}
+          {inWishlist ? "Wishlisted" : "Add to Wishlist"}
         </Button>
+
         <Button size="lg" variant="outline">
           <Share2 className="h-5 w-5 mr-2" />
           Share

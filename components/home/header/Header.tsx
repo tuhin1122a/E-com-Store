@@ -10,7 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-import { useWishlist } from "@/hooks/use-wishlist";
+import { useCart } from "@/context/CartContext"; // Cart context ইম্পোর্ট
+import { useWishlist } from "@/context/WishlistContext"; // তোমার wishlist context ঠিকমত ইম্পোর্ট করো
+
 import Logo from "./Logo";
 import MobileMenu from "./MobileMenu";
 import NavLinks from "./NavLinks";
@@ -24,9 +26,8 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const cartItemsCount = 3;
-  const { items } = useWishlist();
-  const wishlistCount = items.length;
+  const { wishlistItems } = useWishlist();
+  const { cartItems } = useCart();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
@@ -64,9 +65,9 @@ export default function Header() {
               <Button variant="ghost" size="icon" asChild>
                 <a href="/wishlist" className="relative">
                   <Heart className="h-5 w-5" />
-                  {wishlistCount > 0 && (
+                  {wishlistItems.length > 0 && (
                     <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center bg-red-500 justify-center rounded-full">
-                      {wishlistCount}
+                      {wishlistItems.length}
                     </Badge>
                   )}
                 </a>
@@ -78,9 +79,9 @@ export default function Header() {
               <Button variant="ghost" size="icon" asChild>
                 <a href="/cart" className="relative">
                   <ShoppingCart className="h-5 w-5" />
-                  {cartItemsCount > 0 && (
-                    <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center justify-center rounded-full">
-                      {cartItemsCount}
+                  {cartItems.length > 0 && (
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center bg-red-500 justify-center rounded-full">
+                      {cartItems.length}
                     </Badge>
                   )}
                 </a>

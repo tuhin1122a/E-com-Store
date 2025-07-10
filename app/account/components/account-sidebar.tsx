@@ -13,7 +13,7 @@ import {
   ShoppingBag,
   User,
 } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 
 interface AccountSidebarProps {
   activeSection: string;
@@ -31,13 +31,12 @@ const menuItems = [
 export function AccountSidebar({
   activeSection,
   onSectionChange,
+  user,
 }: AccountSidebarProps) {
-  const { data: session } = useSession();
-  const user = session?.user;
-
   const handleLogout = () => {
     signOut({ callbackUrl: "/login" }); // ✅ Redirects to login page after logout
   };
+  const name = `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
 
   return (
     <Card className="shadow-xl rounded-xl border border-border">
@@ -46,7 +45,7 @@ export function AccountSidebar({
         <div className="flex items-center gap-4 mb-6 pb-6 border-b">
           <Avatar className="h-14 w-14 ring-2 ring-primary/30 hover:ring-primary transition-all">
             <AvatarImage
-              src={user?.image || "/placeholder.svg"}
+              src={user?.avatarUrl || "/placeholder.svg"}
               alt={user?.name || "User"}
               className="object-cover"
             />
