@@ -4,14 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function CartSummary({ items }) {
   const router = useRouter();
-  const { data: session } = useSession();
-  const accessToken = session?.user?.accessToken;
 
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -37,54 +34,18 @@ export function CartSummary({ items }) {
     setAppliedCoupon(null);
   };
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  const handleProceedToCheckout = async () => {
-    if (!accessToken) {
-      alert("You must be logged in to proceed to checkout.");
-      return;
-    }
-
+  const handleProceedToCheckout = () => {
     const cartId = items?.[0]?.cartId;
     if (!cartId) {
       alert("Cart ID not found. Cannot proceed.");
       return;
     }
-
     setLoading(true);
-    try {
-      const summaryData = {
-        cartId,
-        subtotal,
-        shipping,
-        tax,
-        discount,
-        total,
-        couponCode: appliedCoupon,
-      };
 
-      console.log("Summary data:", summaryData); // ✅ Debug here
-
-      const res = await fetch(`${apiUrl}/cart/summary`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(summaryData),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to save cart summary");
-      }
-
+    // simulate short delay for loading UI (optional)
+    setTimeout(() => {
       router.push(`/checkout/${cartId}`);
-    } catch (error) {
-      console.error("Checkout error:", error);
-      alert("Failed to proceed to checkout.");
-    } finally {
-      setLoading(false);
-    }
+    }, 300);
   };
 
   return (
@@ -156,7 +117,7 @@ export function CartSummary({ items }) {
           onClick={handleProceedToCheckout}
           disabled={loading}
         >
-          Proceed to Checkout
+          {loading ? "Loading..." : "Proceed to Checkout"}
         </Button>
 
         <div className="text-center text-xs text-muted-foreground mt-2">

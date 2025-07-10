@@ -1,6 +1,7 @@
 "use client";
 
-import { useWishlist } from "@/hooks/use-wishlist";
+import { useCart } from "@/context/CartContext"; // ✅ from cart context
+import { useWishlist } from "@/context/WishlistContext"; // ✅ use your new context
 import { useSession } from "next-auth/react";
 import { WishlistBulkActions } from "./components/WishlistBulkActions";
 import { WishlistEmpty } from "./components/WishlistEmpty";
@@ -12,19 +13,18 @@ export default function WishlistPage() {
   const user = session?.user;
 
   const {
-    items,
+    wishlistItems,
     loading,
     selectedItems,
     isAllSelected,
-    removeItem,
-    addToCart,
     toggleSelectItem,
     toggleSelectAll,
+    removeFromWishlist,
     removeSelected,
-    addSelectedToCart,
   } = useWishlist();
 
-  // 1. Loading thakle sudhu loading UI
+  const { addToCart, addSelectedToCart } = useCart();
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
@@ -33,7 +33,6 @@ export default function WishlistPage() {
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
-          aria-label="Loading"
         >
           <circle
             className="opacity-25"
@@ -53,8 +52,7 @@ export default function WishlistPage() {
     );
   }
 
-  // 2. Loading sesh ar items empty hole empty UI
-  if (!loading && items.length === 0) {
+  if (!loading && wishlistItems.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
         <WishlistEmpty />
@@ -62,26 +60,25 @@ export default function WishlistPage() {
     );
   }
 
-  // 3. Loading sesh ar item thakle main UI
   return (
     <div className="container mx-auto px-4 py-8">
-      <WishlistHeader itemCount={items.length} />
+      <WishlistHeader itemCount={wishlistItems.length} />
 
       <WishlistBulkActions
         selectedCount={selectedItems.length}
         isAllSelected={isAllSelected}
         onSelectAll={toggleSelectAll}
-        onAddToCart={addSelectedToCart}
+        onAddToCart={() => addSelectedToCart(selectedItems)}
         onRemove={removeSelected}
       />
 
       <WishlistGrid
-        items={items}
+        items={wishlistItems}
         selectedItems={selectedItems}
         onSelectItem={toggleSelectItem}
-        onRemoveItem={removeItem}
-        onAddToCart={addToCart}
-        addSelectedToCart={addSelectedToCart}
+        onRemoveItem={removeFromWishlist}
+        onAddToCart={(productId) => addToCart(productId, 1)}
+        addSelectedToCart={() => addSelectedToCart(selectedItems)}
         isAllSelected={isAllSelected}
       />
     </div>

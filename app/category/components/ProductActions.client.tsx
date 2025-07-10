@@ -187,7 +187,8 @@ export function ProductActions({ productId }: ProductActionsProps) {
         await addToWishlist(productId);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Wishlist toggle failed:", err);
+      alert("Wishlist update failed.");
     } finally {
       setLoadingWishlist(false);
     }
@@ -203,10 +204,10 @@ export function ProductActions({ productId }: ProductActionsProps) {
       if (inCart) {
         await removeFromCart(productId);
       } else {
-        await addToCart({ id: productId } as any);
+        await addToCart(productId, 1); // ✅ FIXED: Correct usage
       }
     } catch (err) {
-      console.error(err);
+      console.error("Cart toggle failed:", err);
       alert("Cart update failed.");
     } finally {
       setLoadingCart(false);
