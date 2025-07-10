@@ -3,6 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useUser } from "@/context/UserContext";
 
 import { cn } from "@/lib/utils";
 import {
@@ -31,12 +32,13 @@ const menuItems = [
 export function AccountSidebar({
   activeSection,
   onSectionChange,
-  user,
 }: AccountSidebarProps) {
   const handleLogout = () => {
     signOut({ callbackUrl: "/login" }); // ✅ Redirects to login page after logout
   };
-  const name = `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
+  const { userData } = useUser();
+  const name =
+    `${userData?.firstName || ""} ${userData?.lastName || ""}`.trim();
 
   return (
     <Card className="shadow-xl rounded-xl border border-border">
@@ -45,19 +47,17 @@ export function AccountSidebar({
         <div className="flex items-center gap-4 mb-6 pb-6 border-b">
           <Avatar className="h-14 w-14 ring-2 ring-primary/30 hover:ring-primary transition-all">
             <AvatarImage
-              src={user?.avatarUrl || "/placeholder.svg"}
-              alt={user?.name || "User"}
+              src={userData?.avatarUrl || "/placeholder.svg"}
+              alt={name || "User"}
               className="object-cover"
             />
             <AvatarFallback className="bg-muted text-primary font-semibold">
-              {user?.name?.charAt(0)}
+              {name.charAt(0)}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h3 className="font-semibold text-lg leading-tight">
-              {user?.name}
-            </h3>
-            <p className="text-sm text-muted-foreground">{user?.email}</p>
+            <h3 className="font-semibold text-lg leading-tight">{name}</h3>
+            <p className="text-sm text-muted-foreground">{userData?.email}</p>
           </div>
         </div>
 

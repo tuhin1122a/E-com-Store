@@ -8,23 +8,11 @@ import { ShippingForm } from "@/app/checkout/components/shipping-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-import { apiClient } from "@/lib/api";
+import { useCart } from "@/context/CartContext";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-
-interface CartItem {
-  id: string;
-  productId: string;
-  quantity: number;
-  price: number;
-  product: {
-    id: string;
-    name: string;
-    image: string;
-  };
-}
+import { useEffect, useState } from "react";
 
 interface CheckoutData {
   shippingAddress: any;
@@ -38,8 +26,6 @@ export default function CheckoutPage({ params }: { params: { id: string } }) {
   const user = session?.user;
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [checkoutData, setCheckoutData] = useState<CheckoutData>({
     shippingAddress: {},
     billingAddress: {},
@@ -47,28 +33,15 @@ export default function CheckoutPage({ params }: { params: { id: string } }) {
     sameAsBilling: true,
   });
 
-  // useEffect(() => {
-  //   if (user) {
-  //     fetchCart();
-  //   } else {
-  //     router.push("/login?redirect=/checkout");
-  //   }
-  // }, [user, router]);
+  const { cartItems, loading, fetchCart } = useCart();
 
-  const fetchCart = async () => {
-    try {
-      const response = await apiClient.getCart();
-      setCartItems(response.items || []);
-
-      if (response.items?.length === 0) {
-        router.push("/cart");
-      }
-    } catch (error) {
-      console.error("Failed to fetch cart:", error);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (user) {
+      fetchCart();
+    } else {
+      router.push("/login?redirect=/checkout");
     }
-  };
+  }, [user, router]);
 
   const handleStepComplete = (step: number, data: any) => {
     setCheckoutData((prev) => ({ ...prev, ...data }));
@@ -85,15 +58,16 @@ export default function CheckoutPage({ params }: { params: { id: string } }) {
         paymentMethod: checkoutData.paymentMethod,
       };
 
-      const response = await apiClient.createOrder(orderData);
-      router.push(`/order-confirmation/${response.order.id}`);
+      // Replace this with actual API call to place order
+      console.log("Placing order:", orderData);
+      router.push("/order-confirmation/success");
     } catch (error) {
       console.error("Failed to place order:", error);
     }
   };
 
   if (!user) {
-    return null; // Will redirect to login
+    return null;
   }
 
   if (loading) {
@@ -136,10 +110,8 @@ export default function CheckoutPage({ params }: { params: { id: string } }) {
 
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          {/* Progress Steps */}
           <CheckoutSteps currentStep={currentStep} />
 
-          {/* Step Content */}
           <div className="mt-8">
             {currentStep === 1 && (
               <ShippingForm
@@ -167,7 +139,6 @@ export default function CheckoutPage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        {/* Order Summary */}
         <div>
           <CheckoutSummary cartItems={cartItems} />
         </div>

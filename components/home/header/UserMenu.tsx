@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useUser } from "@/context/UserContext";
 import { User } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
@@ -16,6 +17,7 @@ import Link from "next/link";
 export default function UserMenu() {
   const { data: session } = useSession();
   const user = session?.user;
+  const { userData } = useUser(); // Assuming useUser is a custom hook to get user data
 
   const handleLogout = () => {
     signOut({ callbackUrl: "/login" }); // Redirects to login page after logout
@@ -26,7 +28,7 @@ export default function UserMenu() {
       return (
         <div className="h-8 w-8 rounded-full overflow-hidden">
           <Image
-            src={user.image}
+            src={userData?.avatarUrl || user.image}
             alt={user.name || "User"}
             width={32}
             height={32}

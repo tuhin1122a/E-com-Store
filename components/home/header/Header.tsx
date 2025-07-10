@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useCart } from "@/context/CartContext"; // Cart context ইম্পোর্ট
 import { useWishlist } from "@/context/WishlistContext"; // তোমার wishlist context ঠিকমত ইম্পোর্ট করো
 
+import { useUser } from "@/context/UserContext";
 import Logo from "./Logo";
 import MobileMenu from "./MobileMenu";
 import NavLinks from "./NavLinks";
@@ -22,6 +23,8 @@ import UserMenu from "./UserMenu";
 export default function Header() {
   const { data: session } = useSession();
   const user = session?.user;
+  const { userData } = useUser();
+  console.log("User Data:", userData);
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

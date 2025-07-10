@@ -16,11 +16,11 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useWishlist } from "@/hooks/use-wishlist";
+import { useWishlist } from "@/context/WishlistContext";
 import { apiClient } from "@/lib/api";
 
 export function AccountOverview() {
-  const { items } = useWishlist();
+  const { wishlistItems } = useWishlist();
 
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -80,7 +80,7 @@ export function AccountOverview() {
         <StatCard
           icon={<Heart className="text-red-500" />}
           label="Wishlist Items"
-          value={items.length}
+          value={wishlistItems?.length}
           bg="bg-red-100"
         />
         <StatCard

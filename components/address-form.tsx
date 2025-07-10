@@ -1,24 +1,30 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState } from "react";
 
 interface AddressFormProps {
-  initialData?: any
-  onSubmit: (data: any) => void
+  initialData?: any;
+  onSubmit: (data: any) => void;
 }
 
 export function AddressForm({ initialData, onSubmit }: AddressFormProps) {
   const [formData, setFormData] = useState({
-    type: initialData?.type || "shipping",
+    type: initialData?.type || "SHIPPING",
     firstName: initialData?.firstName || "",
     lastName: initialData?.lastName || "",
     company: initialData?.company || "",
@@ -29,16 +35,16 @@ export function AddressForm({ initialData, onSubmit }: AddressFormProps) {
     zipCode: initialData?.zipCode || "",
     country: initialData?.country || "United States",
     isDefault: initialData?.isDefault || false,
-  })
+  });
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(formData)
-  }
+    e.preventDefault();
+    onSubmit(formData);
+  };
 
   return (
     <Card>
@@ -49,15 +55,20 @@ export function AddressForm({ initialData, onSubmit }: AddressFormProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Address Type */}
           <div>
-            <Label className="text-base font-medium mb-3 block">Address Type</Label>
-            <RadioGroup value={formData.type} onValueChange={(value) => handleInputChange("type", value)}>
+            <Label className="text-base font-medium mb-3 block">
+              Address Type
+            </Label>
+            <RadioGroup
+              value={formData.type}
+              onValueChange={(value) => handleInputChange("type", value)}
+            >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="shipping" id="shipping" />
-                <Label htmlFor="shipping">Shipping Address</Label>
+                <Label htmlFor="SHIPPING">Shipping Address</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="billing" id="billing" />
-                <Label htmlFor="billing">Billing Address</Label>
+                <Label htmlFor="BILLING">Billing Address</Label>
               </div>
             </RadioGroup>
           </div>
@@ -149,7 +160,10 @@ export function AddressForm({ initialData, onSubmit }: AddressFormProps) {
           {/* Country */}
           <div>
             <Label htmlFor="country">Country</Label>
-            <Select value={formData.country} onValueChange={(value) => handleInputChange("country", value)}>
+            <Select
+              value={formData.country}
+              onValueChange={(value) => handleInputChange("country", value)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -167,9 +181,13 @@ export function AddressForm({ initialData, onSubmit }: AddressFormProps) {
             <Checkbox
               id="isDefault"
               checked={formData.isDefault}
-              onCheckedChange={(checked) => handleInputChange("isDefault", checked as boolean)}
+              onCheckedChange={(checked) =>
+                handleInputChange("isDefault", checked as boolean)
+              }
             />
-            <Label htmlFor="isDefault">Set as default {formData.type} address</Label>
+            <Label htmlFor="isDefault">
+              Set as default {formData.type} address
+            </Label>
           </div>
 
           <Button type="submit" className="w-full">
@@ -178,5 +196,5 @@ export function AddressForm({ initialData, onSubmit }: AddressFormProps) {
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
