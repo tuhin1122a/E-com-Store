@@ -1,41 +1,47 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { CreditCard, Smartphone, Wallet } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { CreditCard, Smartphone, Wallet } from "lucide-react";
+import { useState } from "react";
 
 interface PaymentFormProps {
-  onComplete: (data: any) => void
-  onBack: () => void
-  initialData: any
+  onComplete: (data: any) => void;
+  onBack: () => void;
+  initialData: any;
 }
 
-export function PaymentForm({ onComplete, onBack, initialData }: PaymentFormProps) {
-  const [paymentMethod, setPaymentMethod] = useState(initialData.paymentMethod || "card")
+export function PaymentForm({
+  onComplete,
+  onBack,
+  initialData,
+}: PaymentFormProps) {
+  const [paymentMethod, setPaymentMethod] = useState(
+    initialData.paymentMethod || "card"
+  );
   const [cardData, setCardData] = useState({
-    cardNumber: "",
-    expiryDate: "",
-    cvv: "",
-    cardholderName: "",
-  })
+    cardNumber: initialData.cardData?.cardNumber || "",
+    expiryDate: initialData.cardData?.expiryDate || "",
+    cvv: initialData.cardData?.cvv || "",
+    cardholderName: initialData.cardData?.cardholderName || "",
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     onComplete({
       paymentMethod,
       cardData: paymentMethod === "card" ? cardData : null,
-    })
-  }
+    });
+  };
 
   const handleCardInputChange = (field: string, value: string) => {
-    setCardData((prev) => ({ ...prev, [field]: value }))
-  }
+    setCardData((prev) => ({ ...prev, [field]: value }));
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -85,7 +91,9 @@ export function PaymentForm({ onComplete, onBack, initialData }: PaymentFormProp
               <Input
                 id="cardholderName"
                 value={cardData.cardholderName}
-                onChange={(e) => handleCardInputChange("cardholderName", e.target.value)}
+                onChange={(e) =>
+                  handleCardInputChange("cardholderName", e.target.value)
+                }
                 required
               />
             </div>
@@ -95,7 +103,9 @@ export function PaymentForm({ onComplete, onBack, initialData }: PaymentFormProp
                 id="cardNumber"
                 placeholder="1234 5678 9012 3456"
                 value={cardData.cardNumber}
-                onChange={(e) => handleCardInputChange("cardNumber", e.target.value)}
+                onChange={(e) =>
+                  handleCardInputChange("cardNumber", e.target.value)
+                }
                 required
               />
             </div>
@@ -106,7 +116,9 @@ export function PaymentForm({ onComplete, onBack, initialData }: PaymentFormProp
                   id="expiryDate"
                   placeholder="MM/YY"
                   value={cardData.expiryDate}
-                  onChange={(e) => handleCardInputChange("expiryDate", e.target.value)}
+                  onChange={(e) =>
+                    handleCardInputChange("expiryDate", e.target.value)
+                  }
                   required
                 />
               </div>
@@ -134,5 +146,5 @@ export function PaymentForm({ onComplete, onBack, initialData }: PaymentFormProp
         </Button>
       </div>
     </form>
-  )
+  );
 }
