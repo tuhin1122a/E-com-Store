@@ -5,7 +5,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import type { ReactNode } from "react";
 
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_PK!
 );
 
 interface StripeProviderProps {
