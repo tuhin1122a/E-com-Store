@@ -1,22 +1,42 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
+import { useState } from "react";
 
 interface OrderReviewProps {
-  checkoutData: any
-  cartItems: any[]
-  onPlaceOrder: () => void
-  onBack: () => void
+  checkoutData: any;
+  cartItems: any[];
+  onPlaceOrder: () => Promise<void>; // Make onPlaceOrder async for loading state
+  onBack: () => void;
 }
 
-export function OrderReview({ checkoutData, cartItems, onPlaceOrder, onBack }: OrderReviewProps) {
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const shipping = subtotal > 50 ? 0 : 10
-  const tax = subtotal * 0.08
-  const total = subtotal + shipping + tax
+export function OrderReview({
+  checkoutData,
+  cartItems,
+  onPlaceOrder,
+  onBack,
+}: OrderReviewProps) {
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const shipping = subtotal > 50 ? 0 : 10;
+  const tax = subtotal * 0.08;
+  const total = subtotal + shipping + tax;
+
+  const handlePlaceOrderClick = async () => {
+    setIsPlacingOrder(true);
+    try {
+      await onPlaceOrder();
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -31,17 +51,21 @@ export function OrderReview({ checkoutData, cartItems, onPlaceOrder, onBack }: O
               <div key={item.id} className="flex items-center gap-4">
                 <div className="relative w-16 h-16 rounded-lg overflow-hidden">
                   <Image
-                    src={item.product.image || "/placeholder.svg"}
-                    alt={item.product.name}
+                    src={item?.product?.images?.[0]?.url || "/placeholder.svg"}
+                    alt={item?.product?.name}
                     fill
                     className="object-cover"
                   />
                 </div>
                 <div className="flex-1">
                   <h4 className="font-medium">{item.product.name}</h4>
-                  <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Quantity: {item.quantity}
+                  </p>
                 </div>
-                <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
+                <p className="font-medium">
+                  ${(item.price * item.quantity).toFixed(2)}
+                </p>
               </div>
             ))}
           </div>
@@ -56,12 +80,16 @@ export function OrderReview({ checkoutData, cartItems, onPlaceOrder, onBack }: O
         <CardContent>
           <div className="text-sm">
             <p>
-              {checkoutData.shippingAddress.firstName} {checkoutData.shippingAddress.lastName}
+              {checkoutData.shippingAddress.firstName}{" "}
+              {checkoutData.shippingAddress.lastName}
             </p>
             <p>{checkoutData.shippingAddress.address}</p>
-            {checkoutData.shippingAddress.apartment && <p>{checkoutData.shippingAddress.apartment}</p>}
+            {checkoutData.shippingAddress.apartment && (
+              <p>{checkoutData.shippingAddress.apartment}</p>
+            )}
             <p>
-              {checkoutData.shippingAddress.city}, {checkoutData.shippingAddress.state}{" "}
+              {checkoutData.shippingAddress.city},{" "}
+              {checkoutData.shippingAddress.state}{" "}
               {checkoutData.shippingAddress.zipCode}
             </p>
             <p>{checkoutData.shippingAddress.country}</p>
@@ -75,7 +103,9 @@ export function OrderReview({ checkoutData, cartItems, onPlaceOrder, onBack }: O
           <CardTitle>Payment Method</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm capitalize">{checkoutData.paymentMethod.replace("-", " ")}</p>
+          <p className="text-sm capitalize">
+            {checkoutData.paymentMethod.replace("-", " ")}
+          </p>
         </CardContent>
       </Card>
 
@@ -108,13 +138,17 @@ export function OrderReview({ checkoutData, cartItems, onPlaceOrder, onBack }: O
       </Card>
 
       <div className="flex justify-between">
-        <Button variant="outline" onClick={onBack}>
+        <Button variant="outline" onClick={onBack} disabled={isPlacingOrder}>
           Back to Payment
         </Button>
-        <Button size="lg" onClick={onPlaceOrder}>
-          Place Order
+        <Button
+          size="lg"
+          onClick={handlePlaceOrderClick}
+          disabled={isPlacingOrder}
+        >
+          {isPlacingOrder ? "Placing..." : "Place Order"}
         </Button>
       </div>
     </div>
-  )
+  );
 }

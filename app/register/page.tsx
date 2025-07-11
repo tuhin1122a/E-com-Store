@@ -58,7 +58,6 @@ export default function RegisterPage() {
       setError("Password must be at least 6 characters long");
       return;
     }
-    console.log("fromJSON", formData);
 
     setLoading(true);
 
@@ -81,7 +80,6 @@ export default function RegisterPage() {
       );
 
       const data = await res.json();
-      console.log("🚨 Registration error response:", data);
 
       if (!res.ok) {
         throw new Error(data.message || "Registration failed");

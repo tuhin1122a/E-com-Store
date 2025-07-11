@@ -1,42 +1,46 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
+import { useState } from "react";
 
 interface CheckoutSummaryProps {
   cartItems: Array<{
-    id: string
-    productId: string
-    quantity: number
-    price: number
+    id: string;
+    productId: string;
+    quantity: number;
+    price: number;
     product: {
-      id: string
-      name: string
-      image: string
-    }
-  }>
+      id: string;
+      name: string;
+      image: string;
+    };
+  }>;
 }
 
 export function CheckoutSummary({ cartItems }: CheckoutSummaryProps) {
-  const [couponCode, setCouponCode] = useState("")
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null)
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const shipping = subtotal > 50 ? 0 : 10
-  const tax = subtotal * 0.08
-  const discount = appliedCoupon ? 20 : 0
-  const total = subtotal + shipping + tax - discount
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const shipping = subtotal > 50 ? 0 : 10;
+  const tax = subtotal * 0.08;
+  const discount = appliedCoupon ? 20 : 0;
+  const total = subtotal + shipping + tax - discount;
+  console.log("cartItems", cartItems);
 
   const applyCoupon = () => {
     if (couponCode.toLowerCase() === "save20") {
-      setAppliedCoupon("SAVE20")
-      setCouponCode("")
+      setAppliedCoupon("SAVE20");
+      setCouponCode("");
     }
-  }
+  };
 
   return (
     <Card className="sticky top-4">
@@ -50,7 +54,7 @@ export function CheckoutSummary({ cartItems }: CheckoutSummaryProps) {
             <div key={item.id} className="flex items-center gap-3">
               <div className="relative w-12 h-12 rounded-lg overflow-hidden">
                 <Image
-                  src={item.product.image || "/placeholder.svg"}
+                  src={item.product?.images[0].url || "/placeholder.svg"}
                   alt={item.product.name}
                   fill
                   className="object-cover"
@@ -60,10 +64,14 @@ export function CheckoutSummary({ cartItems }: CheckoutSummaryProps) {
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{item.product.name}</p>
+                <p className="text-sm font-medium truncate">
+                  {item.product.name}
+                </p>
                 <p className="text-sm text-muted-foreground">${item.price}</p>
               </div>
-              <p className="text-sm font-medium">${(item.price * item.quantity).toFixed(2)}</p>
+              <p className="text-sm font-medium">
+                ${(item.price * item.quantity).toFixed(2)}
+              </p>
             </div>
           ))}
         </div>
@@ -73,12 +81,20 @@ export function CheckoutSummary({ cartItems }: CheckoutSummaryProps) {
         {/* Coupon Code */}
         <div className="space-y-2">
           <div className="flex gap-2">
-            <Input placeholder="Coupon code" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} />
+            <Input
+              placeholder="Coupon code"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+            />
             <Button variant="outline" onClick={applyCoupon}>
               Apply
             </Button>
           </div>
-          {appliedCoupon && <p className="text-sm text-green-600">Coupon {appliedCoupon} applied!</p>}
+          {appliedCoupon && (
+            <p className="text-sm text-green-600">
+              Coupon {appliedCoupon} applied!
+            </p>
+          )}
         </div>
 
         <Separator />
@@ -113,5 +129,5 @@ export function CheckoutSummary({ cartItems }: CheckoutSummaryProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

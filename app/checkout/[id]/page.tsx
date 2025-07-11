@@ -15,6 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 import { useCart } from "@/context/CartContext";
 import { useUser } from "@/context/UserContext";
+import { StripeProvider } from "@/utility/StripeProvider";
 
 interface Address {
   type: string;
@@ -36,11 +37,13 @@ interface CheckoutData {
   billingAddress: Partial<Address>;
   paymentMethod: string;
   sameAsBilling: boolean;
+  paymentIntentId: string; // এখন এটা обязательное (required)
 }
 
 export default function CheckoutPage() {
   const { data: session } = useSession();
   const user = session?.user;
+  const accessToken = user?.accessToken;
   const router = useRouter();
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -49,10 +52,29 @@ export default function CheckoutPage() {
     billingAddress: {},
     paymentMethod: "",
     sameAsBilling: true,
+    paymentIntentId: "", // খালি স্ট্রিং দিয়ে শুরু দিতে পারেন
   });
+
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
   const { cartItems, loading, fetchCart } = useCart();
   const { userData } = useUser();
+
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const shipping = subtotal > 50 ? 0 : 10;
+  const tax = subtotal * 0.08;
+  const discount = appliedCoupon ? 20 : 0;
+  const total = subtotal + shipping + tax - discount;
+  console.log("🧾 Checkout Summary:", {
+    subtotal,
+    shipping,
+    tax,
+    discount,
+    total,
+  });
 
   useEffect(() => {
     if (!user) {
@@ -87,15 +109,53 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     try {
       const orderData = {
-        billingAddress: checkoutData.billingAddress,
-        shippingAddress: checkoutData.sameAsBilling
-          ? checkoutData.billingAddress
-          : checkoutData.shippingAddress,
+        userId: user?.id,
+        shippingAddress: checkoutData.shippingAddress,
+        billingAddress: checkoutData.sameAsBilling
+          ? checkoutData.shippingAddress
+          : checkoutData.billingAddress,
         paymentMethod: checkoutData.paymentMethod,
+        paymentIntentId: checkoutData.paymentIntentId,
+        items: cartItems.map((item) => ({
+          productId: item.product.id,
+          productName: item.product.name, // ✅ match with backend schema
+          price: item.product.price,
+          quantity: item.quantity,
+        })),
+        summary: {
+          subtotal,
+          shippingAmount: shipping,
+          taxAmount: tax,
+          discountAmount: discount,
+          totalAmount: total,
+          currency: "USD",
+        },
       };
+
+      console.log("🧾 Order Data:", orderData);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/orders`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`, // 🔐 send token
+          },
+          body: JSON.stringify(orderData),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Order failed");
+      }
+
+      // ✅ Navigate on success
       router.push("/order-confirmation/success");
     } catch (error) {
-      console.error("Failed to place order:", error);
+      console.error("❌ Failed to place order:", error);
     }
   };
 
@@ -152,11 +212,21 @@ export default function CheckoutPage() {
             )}
 
             {currentStep === 2 && (
-              <PaymentForm
-                onComplete={(data) => handleStepComplete(2, data)}
-                onBack={() => setCurrentStep(1)}
-                initialData={checkoutData}
-              />
+              <StripeProvider>
+                <PaymentForm
+                  onComplete={({ paymentIntentId }) => {
+                    setCheckoutData((prev) => ({
+                      ...prev,
+                      paymentMethod: "card",
+                      paymentIntentId,
+                    }));
+                    handleStepComplete(2, {});
+                  }}
+                  onBack={() => setCurrentStep(1)}
+                  initialData={checkoutData}
+                  total={total}
+                />
+              </StripeProvider>
             )}
 
             {currentStep === 3 && (

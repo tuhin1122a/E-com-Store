@@ -1,148 +1,140 @@
 "use client";
 
-import type React from "react";
-
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CreditCard, Smartphone, Wallet } from "lucide-react";
+import {
+  CardCvcElement,
+  CardExpiryElement,
+  CardNumberElement,
+  useElements,
+  useStripe,
+} from "@stripe/react-stripe-js";
 import { useState } from "react";
 
 interface PaymentFormProps {
-  onComplete: (data: any) => void;
+  onComplete: (data: { paymentIntentId: string }) => void;
   onBack: () => void;
   initialData: any;
+  total: number; // Total amount to be paid
 }
 
-export function PaymentForm({
-  onComplete,
-  onBack,
-  initialData,
-}: PaymentFormProps) {
-  const [paymentMethod, setPaymentMethod] = useState(
-    initialData.paymentMethod || "card"
-  );
-  const [cardData, setCardData] = useState({
-    cardNumber: initialData.cardData?.cardNumber || "",
-    expiryDate: initialData.cardData?.expiryDate || "",
-    cvv: initialData.cardData?.cvv || "",
-    cardholderName: initialData.cardData?.cardholderName || "",
-  });
+export function PaymentForm({ onComplete, onBack, total }: PaymentFormProps) {
+  const amount = total * 100; // Convert to cents for Stripe
+  const stripe = useStripe();
+  const elements = useElements();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onComplete({
-      paymentMethod,
-      cardData: paymentMethod === "card" ? cardData : null,
-    });
+
+    if (!stripe || !elements) {
+      setError("Stripe is not loaded yet.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // STEP 1: Create payment intent from backend
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/payment/create-payment-intent`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount }),
+        }
+      );
+
+      const { success, data, message } = await res.json();
+
+      if (!success)
+        throw new Error(message || "Failed to create payment intent");
+
+      // STEP 2: Confirm payment with Stripe Elements
+      const cardElement = elements.getElement(CardNumberElement);
+      if (!cardElement) throw new Error("Card element not found");
+
+      const result = await stripe.confirmCardPayment(data.clientSecret, {
+        payment_method: {
+          card: cardElement,
+        },
+      });
+
+      if (result.error) {
+        throw new Error(result.error.message || "Payment failed");
+      }
+
+      if (result.paymentIntent?.status === "succeeded") {
+        const paymentIntentId = result.paymentIntent.id;
+
+        // STEP 3: Notify parent component
+        onComplete({ paymentIntentId });
+      } else {
+        throw new Error("Payment was not successful");
+      }
+    } catch (err: any) {
+      setError(err.message || "Payment error");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleCardInputChange = (field: string, value: string) => {
-    setCardData((prev) => ({ ...prev, [field]: value }));
+  const inputStyle = {
+    base: {
+      fontSize: "16px",
+      color: "#1a202c",
+      "::placeholder": { color: "#a0aec0" },
+    },
+    invalid: { color: "#e53e3e" },
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Payment Method</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                <RadioGroupItem value="card" id="card" />
-                <CreditCard className="h-5 w-5" />
-                <Label htmlFor="card" className="flex-1 cursor-pointer">
-                  Credit or Debit Card
-                </Label>
-              </div>
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6 rounded-xl border border-muted p-6 shadow-sm bg-white"
+    >
+      <h2 className="text-xl font-semibold mb-4">Card Information</h2>
 
-              <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                <RadioGroupItem value="paypal" id="paypal" />
-                <Wallet className="h-5 w-5" />
-                <Label htmlFor="paypal" className="flex-1 cursor-pointer">
-                  PayPal
-                </Label>
-              </div>
+      <div className="space-y-4">
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium">Card Number</label>
+          <div className="p-3 border rounded-md bg-gray-50">
+            <CardNumberElement options={{ style: inputStyle }} />
+          </div>
+        </div>
 
-              <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                <RadioGroupItem value="apple-pay" id="apple-pay" />
-                <Smartphone className="h-5 w-5" />
-                <Label htmlFor="apple-pay" className="flex-1 cursor-pointer">
-                  Apple Pay
-                </Label>
-              </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium">Expiry Date</label>
+            <div className="p-3 border rounded-md bg-gray-50">
+              <CardExpiryElement options={{ style: inputStyle }} />
             </div>
-          </RadioGroup>
-        </CardContent>
-      </Card>
+          </div>
 
-      {paymentMethod === "card" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Card Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="cardholderName">Cardholder Name</Label>
-              <Input
-                id="cardholderName"
-                value={cardData.cardholderName}
-                onChange={(e) =>
-                  handleCardInputChange("cardholderName", e.target.value)
-                }
-                required
-              />
+          <div>
+            <label className="text-sm font-medium">CVC</label>
+            <div className="p-3 border rounded-md bg-gray-50">
+              <CardCvcElement options={{ style: inputStyle }} />
             </div>
-            <div>
-              <Label htmlFor="cardNumber">Card Number</Label>
-              <Input
-                id="cardNumber"
-                placeholder="1234 5678 9012 3456"
-                value={cardData.cardNumber}
-                onChange={(e) =>
-                  handleCardInputChange("cardNumber", e.target.value)
-                }
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="expiryDate">Expiry Date</Label>
-                <Input
-                  id="expiryDate"
-                  placeholder="MM/YY"
-                  value={cardData.expiryDate}
-                  onChange={(e) =>
-                    handleCardInputChange("expiryDate", e.target.value)
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="cvv">CVV</Label>
-                <Input
-                  id="cvv"
-                  placeholder="123"
-                  value={cardData.cvv}
-                  onChange={(e) => handleCardInputChange("cvv", e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </div>
+      </div>
 
-      <div className="flex justify-between">
-        <Button type="button" variant="outline" onClick={onBack}>
-          Back to Shipping
+      {error && <p className="text-sm text-red-600 font-medium">{error}</p>}
+
+      <div className="flex justify-between pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onBack}
+          disabled={loading}
+        >
+          Back
         </Button>
-        <Button type="submit" size="lg">
-          Review Order
+        <Button type="submit" disabled={!stripe || loading}>
+          {loading ? "Processing..." : "Pay"}
         </Button>
       </div>
     </form>

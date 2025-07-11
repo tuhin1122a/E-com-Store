@@ -10,7 +10,6 @@ import { ProductActions } from "./ProductActions.client";
 
 export function ProductCardClient({
   product,
-  isWishlisted,
 }: {
   product: ProductCardProps["product"];
   isWishlisted: boolean;
@@ -46,7 +45,6 @@ export function ProductCardClient({
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
           <ProductActions
             productId={product.id}
-            isWishlisted={isWishlisted}
             isInCart={isInCart(product.id)}
           />
         </div>
