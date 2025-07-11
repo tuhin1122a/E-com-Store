@@ -21,7 +21,6 @@ interface ProductInteractionProps {
 }
 
 export function ProductInteraction({ product }: ProductInteractionProps) {
-  // Contexts
   const { cartItems, addToCart, removeFromCart, isInCart } = useCart();
   const {
     items: wishlistItems,
@@ -29,44 +28,33 @@ export function ProductInteraction({ product }: ProductInteractionProps) {
     removeFromWishlist,
     isInWishlist,
   } = useWishlist();
-  console.error("Cart items:", cartItems);
 
-  // Local state for quantity & loading
   const [quantity, setQuantity] = useState(1);
   const [loadingCart, setLoadingCart] = useState(false);
   const [loadingWishlist, setLoadingWishlist] = useState(false);
-
-  // Check if product is in cart or wishlist from context
+  const productId = product.id;
+  console.log("ProductInteraction rendered for product:", productId);
   const inCart = isInCart(product.id);
+  console.log("inCart:", inCart);
   const inWishlist = isInWishlist(product.id);
 
-  // Add to Cart
-  const handleAddToCart = async () => {
+  // 🔁 Unified toggle for cart
+  const toggleCart = async () => {
     setLoadingCart(true);
     try {
-      await addToCart({ id: product.id, quantity });
+      if (inCart) {
+        await removeFromCart(product.id);
+      } else {
+        await addToCart(productId, quantity);
+      }
     } catch (error) {
-      console.error("Add to cart error:", error);
-      alert("Failed to add to cart.");
+      console.error("Cart toggle error:", error);
+      alert("Failed to update cart.");
     } finally {
       setLoadingCart(false);
     }
   };
 
-  // Remove from Cart
-  const handleRemoveFromCart = async () => {
-    setLoadingCart(true);
-    try {
-      await removeFromCart(product.id);
-    } catch (error) {
-      console.error("Remove from cart error:", error);
-      alert("Failed to remove from cart.");
-    } finally {
-      setLoadingCart(false);
-    }
-  };
-
-  // Toggle Wishlist
   const handleToggleWishlist = async () => {
     setLoadingWishlist(true);
     try {
@@ -115,7 +103,7 @@ export function ProductInteraction({ product }: ProductInteractionProps) {
         <Button
           size="lg"
           className="flex-1"
-          onClick={inCart ? handleRemoveFromCart : handleAddToCart}
+          onClick={toggleCart}
           disabled={loadingCart || product.inventoryQuantity < 1}
           variant={inCart ? "destructive" : "default"}
         >
