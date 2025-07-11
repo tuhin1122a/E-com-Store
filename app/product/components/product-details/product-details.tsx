@@ -12,43 +12,43 @@ interface ProductDetailsProps {
 }
 
 // Helper function to check status on the server
-async function checkUserStatus(
-  productId: string,
-  accessToken: string | undefined
-) {
-  if (!accessToken) return { inWishlist: false, inCart: false };
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+// async function checkUserStatus(
+//   productId: string,
+//   accessToken: string | undefined
+// ) {
+//   if (!accessToken) return { inWishlist: false, inCart: false };
+//   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  try {
-    const [wishlistRes, cartRes] = await Promise.all([
-      fetch(`${apiUrl}/wishlist/check/${productId}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        cache: "no-store", // Ensure fresh data for user-specific checks
-      }),
-      fetch(`${apiUrl}/cart/check/${productId}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        cache: "no-store",
-      }),
-    ]);
+//   try {
+//     const [wishlistRes, cartRes] = await Promise.all([
+//       fetch(`${apiUrl}/wishlist/check/${productId}`, {
+//         headers: { Authorization: `Bearer ${accessToken}` },
+//         cache: "no-store", // Ensure fresh data for user-specific checks
+//       }),
+//       fetch(`${apiUrl}/cart/check/${productId}`, {
+//         headers: { Authorization: `Bearer ${accessToken}` },
+//         cache: "no-store",
+//       }),
+//     ]);
 
-    const wishlistData = await wishlistRes.json();
-    const cartData = await cartRes.json();
+//     const wishlistData = await wishlistRes.json();
+//     const cartData = await cartRes.json();
 
-    return {
-      inWishlist: wishlistData.inWishlist,
-      inCart: cartData.inCart,
-    };
-  } catch (error) {
-    console.error("Server-side status check failed:", error);
-    return { inWishlist: false, inCart: false };
-  }
-}
+//     return {
+//       inWishlist: wishlistData.inWishlist,
+//       inCart: cartData.inCart,
+//     };
+//   } catch (error) {
+//     console.error("Server-side status check failed:", error);
+//     return { inWishlist: false, inCart: false };
+//   }
+// }
 
 export async function ProductDetails({ product }: ProductDetailsProps) {
   // 1. Fetch user-specific data ON THE SERVER
   const session = await auth();
   const accessToken = session?.user?.accessToken;
-  const { inWishlist, inCart } = await checkUserStatus(product.id, accessToken);
+  // const { inWishlist, inCart } = await checkUserStatus(product.id, accessToken);
 
   // 2. Perform calculations ON THE SERVER
   const discountPercentage =
@@ -103,11 +103,7 @@ export async function ProductDetails({ product }: ProductDetailsProps) {
         </div>
 
         {/* Client Component for all user actions */}
-        <ProductInteraction
-          product={product}
-          initialIsInCart={inCart}
-          initialIsWishlisted={inWishlist}
-        />
+        <ProductInteraction product={product} />
 
         <Separator />
 
