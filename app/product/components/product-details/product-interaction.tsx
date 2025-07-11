@@ -33,9 +33,7 @@ export function ProductInteraction({ product }: ProductInteractionProps) {
   const [loadingCart, setLoadingCart] = useState(false);
   const [loadingWishlist, setLoadingWishlist] = useState(false);
   const productId = product.id;
-  console.log("ProductInteraction rendered for product:", productId);
   const inCart = isInCart(product.id);
-  console.log("inCart:", inCart);
   const inWishlist = isInWishlist(product.id);
 
   // 🔁 Unified toggle for cart

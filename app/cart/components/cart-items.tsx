@@ -8,7 +8,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 export function CartItems({ items, updateQuantity, removeItem }) {
-  console.log("Cart items:", items);
   if (items.length === 0) {
     return (
       <Card>

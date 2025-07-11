@@ -24,7 +24,6 @@ export default function Header() {
   const { data: session } = useSession();
   const user = session?.user;
   const { userData } = useUser();
-  console.log("User Data:", userData);
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

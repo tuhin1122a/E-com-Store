@@ -19,7 +19,6 @@ export const checkWishlist = async (
     }
 
     const data = await res.json();
-    console.log("Wishlist check response:", data.in);
     return data?.inWishlist ?? false;
   } catch (error) {
     console.error("Error checking wishlist:", error);

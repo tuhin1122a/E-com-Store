@@ -51,7 +51,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const data = await res.json();
-      console.log("Fetched user data:", data);
       setUserData(data.data);
     } catch (error) {
       console.error("Failed to load user data:", error);

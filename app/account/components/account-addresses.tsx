@@ -247,7 +247,6 @@ export function AccountAddresses() {
 
   /** POST /addresses */
   const addAddress = async (payload: Omit<Address, "id">) => {
-    console.log("Adding address:", payload);
     if (!token || !API) return;
     try {
       const res = await fetch(`${API}/addresses`, {

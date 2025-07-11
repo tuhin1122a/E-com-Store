@@ -25,7 +25,6 @@ export default async function AccountPage() {
 
   const data = await res.json();
   const user = data.data; // assuming { data: { id, email, ... } }
-  console.log("User data:", user);
 
   return <AccountPageClient user={user} />;
 }

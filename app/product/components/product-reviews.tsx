@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Star, ThumbsUp, ThumbsDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { Star, ThumbsDown, ThumbsUp } from "lucide-react";
+import { useState } from "react";
 
 interface ProductReviewsProps {
-  productId: string
+  productId: string;
 }
 
 // Mock reviews data
@@ -60,7 +60,7 @@ const mockReviews = [
     notHelpful: 2,
     verified: false,
   },
-]
+];
 
 const ratingDistribution = [
   { stars: 5, count: 45, percentage: 60 },
@@ -68,32 +68,38 @@ const ratingDistribution = [
   { stars: 3, count: 4, percentage: 5 },
   { stars: 2, count: 1, percentage: 1 },
   { stars: 1, count: 1, percentage: 1 },
-]
+];
 
 export function ProductReviews({ productId }: ProductReviewsProps) {
   const [newReview, setNewReview] = useState({
     rating: 0,
     title: "",
     comment: "",
-  })
-  const [showReviewForm, setShowReviewForm] = useState(false)
+  });
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
-  const totalReviews = ratingDistribution.reduce((sum, item) => sum + item.count, 0)
-  const averageRating = ratingDistribution.reduce((sum, item) => sum + item.stars * item.count, 0) / totalReviews
+  const totalReviews = ratingDistribution.reduce(
+    (sum, item) => sum + item.count,
+    0
+  );
+  const averageRating =
+    ratingDistribution.reduce((sum, item) => sum + item.stars * item.count, 0) /
+    totalReviews;
 
   const handleSubmitReview = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // Submit review logic here
-    console.log("Submitting review:", newReview)
-    setNewReview({ rating: 0, title: "", comment: "" })
-    setShowReviewForm(false)
-  }
+    setNewReview({ rating: 0, title: "", comment: "" });
+    setShowReviewForm(false);
+  };
 
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Customer Reviews</h2>
-        <Button onClick={() => setShowReviewForm(!showReviewForm)}>Write a Review</Button>
+        <Button onClick={() => setShowReviewForm(!showReviewForm)}>
+          Write a Review
+        </Button>
       </div>
 
       {/* Review Summary */}
@@ -108,12 +114,16 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                     key={i}
                     className={cn(
                       "h-5 w-5",
-                      i < Math.floor(averageRating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300",
+                      i < Math.floor(averageRating)
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-300"
                     )}
                   />
                 ))}
               </div>
-              <div className="text-sm text-muted-foreground">Based on {totalReviews} reviews</div>
+              <div className="text-sm text-muted-foreground">
+                Based on {totalReviews} reviews
+              </div>
             </div>
           </div>
         </div>
@@ -126,7 +136,9 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                 <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
               </div>
               <Progress value={item.percentage} className="flex-1" />
-              <span className="text-sm text-muted-foreground w-8">{item.count}</span>
+              <span className="text-sm text-muted-foreground w-8">
+                {item.count}
+              </span>
             </div>
           ))}
         </div>
@@ -141,13 +153,17 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
           <CardContent>
             <form onSubmit={handleSubmitReview} className="space-y-4">
               <div>
-                <Label className="text-base font-medium mb-2 block">Rating</Label>
+                <Label className="text-base font-medium mb-2 block">
+                  Rating
+                </Label>
                 <div className="flex gap-1">
                   {[...Array(5)].map((_, i) => (
                     <button
                       key={i}
                       type="button"
-                      onClick={() => setNewReview({ ...newReview, rating: i + 1 })}
+                      onClick={() =>
+                        setNewReview({ ...newReview, rating: i + 1 })
+                      }
                       className="p-1"
                     >
                       <Star
@@ -155,7 +171,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                           "h-6 w-6",
                           i < newReview.rating
                             ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300 hover:text-yellow-400",
+                            : "text-gray-300 hover:text-yellow-400"
                         )}
                       />
                     </button>
@@ -170,7 +186,9 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                   type="text"
                   className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   value={newReview.title}
-                  onChange={(e) => setNewReview({ ...newReview, title: e.target.value })}
+                  onChange={(e) =>
+                    setNewReview({ ...newReview, title: e.target.value })
+                  }
                   placeholder="Summarize your review"
                 />
               </div>
@@ -182,16 +200,25 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                   className="mt-1"
                   rows={4}
                   value={newReview.comment}
-                  onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                  onChange={(e) =>
+                    setNewReview({ ...newReview, comment: e.target.value })
+                  }
                   placeholder="Tell others about your experience with this product"
                 />
               </div>
 
               <div className="flex gap-2">
-                <Button type="submit" disabled={!newReview.rating || !newReview.comment}>
+                <Button
+                  type="submit"
+                  disabled={!newReview.rating || !newReview.comment}
+                >
                   Submit Review
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setShowReviewForm(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowReviewForm(false)}
+                >
                   Cancel
                 </Button>
               </div>
@@ -207,7 +234,10 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
             <CardContent className="pt-6">
               <div className="flex items-start gap-4">
                 <Avatar>
-                  <AvatarImage src={review.userAvatar || "/placeholder.svg"} alt={review.userName} />
+                  <AvatarImage
+                    src={review.userAvatar || "/placeholder.svg"}
+                    alt={review.userName}
+                  />
                   <AvatarFallback>{review.userName.charAt(0)}</AvatarFallback>
                 </Avatar>
 
@@ -215,7 +245,9 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                   <div className="flex items-center gap-2 mb-2">
                     <span className="font-semibold">{review.userName}</span>
                     {review.verified && (
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Verified Purchase</span>
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                        Verified Purchase
+                      </span>
                     )}
                   </div>
 
@@ -226,12 +258,16 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                           key={i}
                           className={cn(
                             "h-4 w-4",
-                            i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300",
+                            i < review.rating
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-300"
                           )}
                         />
                       ))}
                     </div>
-                    <span className="text-sm text-muted-foreground">{new Date(review.date).toLocaleDateString()}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(review.date).toLocaleDateString()}
+                    </span>
                   </div>
 
                   <h4 className="font-semibold mb-2">{review.title}</h4>
@@ -254,5 +290,5 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
         ))}
       </div>
     </div>
-  )
+  );
 }

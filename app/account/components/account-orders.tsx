@@ -22,22 +22,6 @@ export function AccountOrders() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // useEffect(() => {
-  //   fetchOrders();
-  // }, []);
-
-  // const fetchOrders = async () => {
-  //   try {
-  //     const response = await apiClient.getOrders();
-  //     console.log(response);
-  //     setOrders(response);
-  //   } catch (error) {
-  //     console.error("Failed to fetch orders:", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const filteredOrders = orders.filter((order: any) => {
     const matchesSearch = order.orderNumber
       .toLowerCase()

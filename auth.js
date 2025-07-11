@@ -21,7 +21,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         );
 
         const data = await res.json();
-        console.log("🟥 oauth-login status:", res.status);
 
         if (!res.ok || !data?.data?.user) return null;
 
