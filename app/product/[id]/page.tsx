@@ -1,10 +1,11 @@
 import { ProductDetailsSkeleton } from "@/app/product/components/product-details-skeleton";
-import { ProductReviews } from "@/app/product/components/product-reviews";
+
 import { RelatedProducts } from "@/app/product/components/related-products";
 import { fetchProductById } from "@/utility/fetchProductById";
 import { fetchRelatedProductsByCategory } from "@/utility/fetchRelatedProducts";
 import { Suspense } from "react";
 import { ProductDetails } from "../components/product-details/product-details";
+import { ProductReviews } from "../components/reviews/ProductReviews";
 
 interface ProductPageProps {
   params: {
@@ -27,7 +28,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </Suspense>
 
       <div className="mt-16">
-        <ProductReviews productId={product.id} />
+        <ProductReviews product={product} />
       </div>
 
       <div className="mt-16">
