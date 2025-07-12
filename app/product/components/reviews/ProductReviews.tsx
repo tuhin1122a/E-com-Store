@@ -62,6 +62,67 @@ export function ProductReviews({ product }: ProductReviewsProps) {
     setEditingReview(review);
     setShowReviewForm(true);
   };
+  //delete editingReview
+  async function handleDeleteReview(reviewToDelete: any) {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/reviews/${reviewToDelete.productId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${session?.user?.accessToken}`,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to delete review");
+      }
+
+      // Remove deleted review from local state
+      setReviews((prev) =>
+        prev.filter((review) => review.id !== reviewToDelete.id)
+      );
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      // Optionally show error UI here
+    }
+  }
+  //toggle review form
+  const handleToggleHelpful = async (reviewId: string, isHelpful: boolean) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/reviews/${reviewId}/helpful`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.user?.accessToken}`,
+          },
+          body: JSON.stringify({ isHelpful }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to toggle helpful");
+
+      const updated = await res.json();
+
+      // 🔄 Update local review state (optional UI instant update)
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.id === reviewId
+            ? {
+                ...r,
+                helpfulCount: updated.helpfulCount,
+                notHelpfulCount: updated.notHelpfulCount,
+              }
+            : r
+        )
+      );
+    } catch (err) {
+      console.error("Toggle helpful failed", err);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -98,6 +159,8 @@ export function ProductReviews({ product }: ProductReviewsProps) {
         reviews={reviews}
         sessionUserId={userId}
         onEdit={handleEditReview}
+        onDelete={handleDeleteReview}
+        onToggleHelpful={handleToggleHelpful}
       />
     </div>
   );

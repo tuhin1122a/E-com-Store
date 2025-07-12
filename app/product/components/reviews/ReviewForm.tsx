@@ -7,27 +7,49 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface ReviewFormProps {
-  productId: string; // add productId prop to associate review
+  productId: string; // required to associate review
   onCancel: () => void;
   onSubmitSuccess: () => void;
+  initialData?: {
+    id: string;
+    rating: number;
+    title?: string;
+    comment?: string;
+  };
 }
 
 export function ReviewForm({
   productId,
   onCancel,
   onSubmitSuccess,
+  initialData,
 }: ReviewFormProps) {
   const { data: session } = useSession();
+
   const [newReview, setNewReview] = useState({
     rating: 0,
     title: "",
     comment: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Initialize form fields if editing
+  useEffect(() => {
+    if (initialData) {
+      setNewReview({
+        rating: initialData.rating,
+        title: initialData.title || "",
+        comment: initialData.comment || "",
+      });
+    }
+  }, [initialData]);
+
+  const isEdit = Boolean(initialData);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,22 +63,24 @@ export function ReviewForm({
     setError(null);
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/reviews`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.user?.accessToken}`,
-          },
-          body: JSON.stringify({
-            productId,
-            rating: newReview.rating,
-            title: newReview.title,
-            comment: newReview.comment,
-          }),
-        }
-      );
+      const method = isEdit ? "PUT" : "POST";
+      const endpoint = isEdit
+        ? `${process.env.NEXT_PUBLIC_API_URL}/reviews/${productId}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/reviews`;
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.user?.accessToken}`,
+        },
+        body: JSON.stringify({
+          productId,
+          rating: newReview.rating,
+          title: newReview.title,
+          comment: newReview.comment,
+        }),
+      });
 
       if (!response.ok) {
         const data = await response.json();
@@ -75,7 +99,9 @@ export function ReviewForm({
   return (
     <>
       <CardHeader>
-        <h3 className="text-lg font-semibold">Write a Review</h3>
+        <h3 className="text-lg font-semibold">
+          {isEdit ? "Edit Review" : "Write a Review"}
+        </h3>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -139,7 +165,13 @@ export function ReviewForm({
               type="submit"
               disabled={!newReview.rating || !newReview.comment || loading}
             >
-              {loading ? "Submitting..." : "Submit Review"}
+              {loading
+                ? isEdit
+                  ? "Updating..."
+                  : "Submitting..."
+                : isEdit
+                  ? "Update Review"
+                  : "Submit Review"}
             </Button>
             <Button
               type="button"

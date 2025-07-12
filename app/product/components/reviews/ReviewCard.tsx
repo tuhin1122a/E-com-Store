@@ -5,11 +5,21 @@ import { Pencil, Star, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react";
 interface ReviewCardProps {
   review: any;
   sessionUserId?: string;
+  onEdit?: (review: any) => void;
+  onDelete?: (review: any) => void;
+  onToggleHelpful?: (reviewId: string, isHelpful: boolean) => void;
 }
 
-export function ReviewCard({ review, sessionUserId }: ReviewCardProps) {
+export function ReviewCard({
+  review,
+  sessionUserId,
+  onEdit,
+  onDelete,
+  onToggleHelpful,
+}: ReviewCardProps) {
   const userName =
-    `${review.user?.firstName || ""} ${review.user?.lastName || ""}`.trim();
+    `${review.user?.firstName || ""} ${review.user?.lastName || ""}`.trim() ||
+    "Anonymous";
   const avatarUrl = review.user?.avatarUrl;
   const isOwner = review.userId === sessionUserId;
 
@@ -19,7 +29,7 @@ export function ReviewCard({ review, sessionUserId }: ReviewCardProps) {
         <div className="flex items-start gap-4">
           <Avatar>
             <AvatarImage src={avatarUrl || "/placeholder.svg"} alt={userName} />
-            <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
+            <AvatarFallback>{userName.charAt(0) || "A"}</AvatarFallback>
           </Avatar>
 
           <div className="flex-1">
@@ -35,11 +45,21 @@ export function ReviewCard({ review, sessionUserId }: ReviewCardProps) {
 
               {isOwner && (
                 <div className="flex gap-2">
-                  <button className="flex items-center gap-1 px-2 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition">
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 px-2 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    onClick={() => onEdit?.(review)}
+                    aria-label="Edit Review"
+                  >
                     <Pencil className="w-4 h-4" />
                     Edit
                   </button>
-                  <button className="flex items-center gap-1 px-2 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition">
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 px-2 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition focus:outline-none focus:ring-2 focus:ring-red-400"
+                    onClick={() => onDelete?.(review)}
+                    aria-label="Delete Review"
+                  >
                     <Trash2 className="w-4 h-4" />
                     Delete
                   </button>
@@ -48,7 +68,10 @@ export function ReviewCard({ review, sessionUserId }: ReviewCardProps) {
             </div>
 
             <div className="flex items-center gap-2 mb-2">
-              <div className="flex">
+              <div
+                className="flex"
+                aria-label={`Rating: ${review.rating} out of 5 stars`}
+              >
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
@@ -71,11 +94,21 @@ export function ReviewCard({ review, sessionUserId }: ReviewCardProps) {
             <p className="text-muted-foreground mb-4">{review.comment}</p>
 
             <div className="flex items-center gap-4">
-              <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
+              <button
+                type="button"
+                onClick={() => onToggleHelpful?.(review.id, true)}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                aria-label={`Helpful count: ${review.helpfulCount}`}
+              >
                 <ThumbsUp className="h-4 w-4" />
                 Helpful ({review.helpfulCount})
               </button>
-              <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
+              <button
+                type="button"
+                onClick={() => onToggleHelpful?.(review.id, false)}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                aria-label={`Not helpful count: ${review.notHelpfulCount}`}
+              >
                 <ThumbsDown className="h-4 w-4" />
                 Not Helpful ({review.notHelpfulCount})
               </button>
