@@ -4,10 +4,11 @@ import { useSession } from "next-auth/react";
 
 import { AccountAddresses } from "@/app/account/components/account-addresses";
 import { AccountOrders } from "@/app/account/components/account-orders";
-import { AccountOverview } from "@/app/account/components/account-overview";
+
 import { AccountSecurity } from "@/app/account/components/account-security";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AccountOverview } from "./account-overview/AccountOverview";
 import { AccountSidebar } from "./account-sidebar";
 import AccountProfile from "./profile/AccountProfile";
 

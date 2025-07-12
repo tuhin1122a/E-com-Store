@@ -33,7 +33,6 @@ export function CheckoutSummary({ cartItems }: CheckoutSummaryProps) {
   const tax = subtotal * 0.08;
   const discount = appliedCoupon ? 20 : 0;
   const total = subtotal + shipping + tax - discount;
-  console.log("cartItems", cartItems);
 
   const applyCoupon = () => {
     if (couponCode.toLowerCase() === "save20") {
