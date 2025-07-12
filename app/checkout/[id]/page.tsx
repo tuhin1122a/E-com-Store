@@ -68,13 +68,6 @@ export default function CheckoutPage() {
   const tax = subtotal * 0.08;
   const discount = appliedCoupon ? 20 : 0;
   const total = subtotal + shipping + tax - discount;
-  console.log("🧾 Checkout Summary:", {
-    subtotal,
-    shipping,
-    tax,
-    discount,
-    total,
-  });
 
   useEffect(() => {
     if (!user) {
@@ -132,8 +125,6 @@ export default function CheckoutPage() {
         },
       };
 
-      console.log("🧾 Order Data:", orderData);
-
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/orders`,
         {
@@ -147,13 +138,15 @@ export default function CheckoutPage() {
       );
 
       const result = await response.json();
+      const orderNumber = result?.data?.orderNumber;
+      console.log("OrderNumber:", orderNumber);
 
       if (!response.ok) {
         throw new Error(result.error || "Order failed");
       }
 
       // ✅ Navigate on success
-      router.push("/order-confirmation/success");
+      router.push(`/order-confirmation/success?orderNumber=${orderNumber}`);
     } catch (error) {
       console.error("❌ Failed to place order:", error);
     }
