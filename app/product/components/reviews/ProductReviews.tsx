@@ -1,9 +1,10 @@
 "use client";
 
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useSession } from "next-auth/react";
-import { useState } from "react";
 
 import { ReviewForm } from "./ReviewForm";
 import { ReviewList } from "./ReviewList";
@@ -17,32 +18,87 @@ interface ProductReviewsProps {
 export function ProductReviews({ product }: ProductReviewsProps) {
   const { data: session } = useSession();
   const userId = session?.user?.id;
+  const accessToken = session?.user?.accessToken;
   const isBuyer = product?.buyers?.some((b: any) => b.id === userId);
 
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [editingReview, setEditingReview] = useState<any | null>(null);
+  const [reviews, setReviews] = useState([]);
+
+  const hasReviewed = reviews.some((r: any) => r.userId === userId);
+
+  // Fetch reviews
+  const fetchReviews = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/reviews/${product.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch reviews");
+      }
+
+      const data = await res.json();
+      setReviews(data);
+      console.log("Fetched Reviews:", data);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (product?.id && accessToken) {
+      fetchReviews();
+    }
+  }, [product?.id, accessToken]);
+
+  // Handle edit action from ReviewCard
+  const handleEditReview = (review: any) => {
+    setEditingReview(review);
+    setShowReviewForm(true);
+  };
 
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Customer Reviews</h2>
-        {isBuyer && (
+        {isBuyer && !hasReviewed && !editingReview && (
           <Button onClick={() => setShowReviewForm(!showReviewForm)}>
             Write a Review
           </Button>
         )}
       </div>
 
-      <ReviewSummary />
+      <ReviewSummary reviews={reviews} />
+
       {showReviewForm && (
         <Card>
           <ReviewForm
-            onCancel={() => setShowReviewForm(false)}
-            onSubmitSuccess={() => setShowReviewForm(false)}
             productId={product.id}
+            initialData={editingReview}
+            onCancel={() => {
+              setShowReviewForm(false);
+              setEditingReview(null);
+            }}
+            onSubmitSuccess={() => {
+              fetchReviews(); // ✅ refresh reviews after submit
+              setShowReviewForm(false);
+              setEditingReview(null);
+            }}
           />
         </Card>
       )}
-      <ReviewList />
+
+      <ReviewList
+        reviews={reviews}
+        sessionUserId={userId}
+        onEdit={handleEditReview}
+      />
     </div>
   );
 }
