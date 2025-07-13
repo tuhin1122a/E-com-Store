@@ -60,6 +60,7 @@
     "next-auth": "^5.0.0-beta.28",
     "next-themes": "latest",
     "prisma": "latest",
+    "query-string": "^9.2.2",
     "react": "^18",
     "react-day-picker": "8.10.1",
     "react-dom": "^18",
