@@ -128,7 +128,7 @@ export default async function OrderDetailsPage({ params }: ProductPageProps) {
           <OrderSummary order={orderDetails?.data} />
           <PaymentInfo order={orderDetails?.data} />
           <CustomerInfo order={orderDetails?.data} />
-          <OrderActions order={orderData} />
+          <OrderActions order={orderDetails?.data} />
         </div>
       </div>
     </div>

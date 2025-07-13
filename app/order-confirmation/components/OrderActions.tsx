@@ -1,6 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { downloadInvoice } from "@/utility/downloadInvoice";
+
 import { ArrowLeft, Download } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -12,42 +14,14 @@ interface OrderActionsProps {
 export default function OrderActions({ orderNumber }: OrderActionsProps) {
   const { data: session } = useSession();
 
-  async function handleDownloadInvoice() {
-    if (!session?.user?.accessToken) {
-      alert("You must be logged in to download the invoice.");
+  const handleDownload = () => {
+    if (!orderNumber || !session?.user?.accessToken) {
+      alert("Missing order number or access token");
       return;
     }
 
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/orders/invoice/${orderNumber}`,
-        {
-          headers: {
-            Authorization: `Bearer ${session.user.accessToken}`,
-          },
-        }
-      );
-
-      if (!res.ok) throw new Error("Failed to download invoice");
-
-      // Get the blob data from response
-      const blob = await res.blob();
-
-      // Create a URL for the blob and trigger download
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Invoice_${orderNumber}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-
-      // Clean up
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error: any) {
-      alert(error.message || "Failed to download invoice");
-    }
-  }
+    downloadInvoice(orderNumber, session.user.accessToken);
+  };
 
   return (
     <div className="flex flex-col sm:flex-row gap-4">
@@ -58,11 +32,7 @@ export default function OrderActions({ orderNumber }: OrderActionsProps) {
         </Link>
       </Button>
 
-      <Button
-        variant="outline"
-        className="flex-1"
-        onClick={handleDownloadInvoice}
-      >
+      <Button variant="outline" className="flex-1" onClick={handleDownload}>
         <Download className="h-4 w-4 mr-2" />
         Download Invoice
       </Button>

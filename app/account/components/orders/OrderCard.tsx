@@ -3,12 +3,15 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { downloadInvoice } from "@/utility/downloadInvoice";
 import { Download, Eye, RotateCcw } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export function OrderCard({ order }: { order: any }) {
   const router = useRouter();
+  const { data: session } = useSession();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -27,6 +30,14 @@ export function OrderCard({ order }: { order: any }) {
 
   const handleViewDetails = () => {
     router.push(`/orders/${order.orderNumber}`);
+  };
+
+  const handleDownloadInvoice = () => {
+    if (!session?.user?.accessToken) {
+      alert("You must be logged in to download the invoice.");
+      return;
+    }
+    downloadInvoice(order.orderNumber, session.user.accessToken);
   };
 
   return (
@@ -49,6 +60,7 @@ export function OrderCard({ order }: { order: any }) {
           </div>
         </div>
       </CardHeader>
+
       <CardContent>
         <div className="space-y-3 mb-4">
           {order.items?.slice(0, 3).map((item: any) => (
@@ -81,10 +93,12 @@ export function OrderCard({ order }: { order: any }) {
             <Eye className="h-4 w-4 mr-2" />
             View Details
           </Button>
-          <Button variant="outline" size="sm">
+
+          <Button variant="outline" size="sm" onClick={handleDownloadInvoice}>
             <Download className="h-4 w-4 mr-2" />
             Download Invoice
           </Button>
+
           {order.status === "delivered" && (
             <Button variant="outline" size="sm">
               <RotateCcw className="h-4 w-4 mr-2" />
