@@ -1,35 +1,46 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useState } from "react";
-
 import { Heart, Menu, Search, ShoppingCart } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-import { useCart } from "@/context/CartContext"; // Cart context ইম্পোর্ট
-import { useWishlist } from "@/context/WishlistContext"; // তোমার wishlist context ঠিকমত ইম্পোর্ট করো
-
+import { useCart } from "@/context/CartContext";
 import { useUser } from "@/context/UserContext";
+import { useWishlist } from "@/context/WishlistContext";
+
 import Logo from "./Logo";
 import MobileMenu from "./MobileMenu";
 import NavLinks from "./NavLinks";
-import SearchBar from "./SearchBar";
 import UserMenu from "./UserMenu";
+
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function Header() {
   const { data: session } = useSession();
   const user = session?.user;
   const { userData } = useUser();
+  const router = useRouter();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const debouncedSearch = useDebounce(searchQuery, 500);
+
   const { wishlistItems } = useWishlist();
   const { cartItems } = useCart();
+
+  // Redirect on search input debounce
+  if (debouncedSearch.trim().length > 1) {
+    router.push(
+      `/products?search=${encodeURIComponent(debouncedSearch.trim())}`
+    );
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
@@ -45,11 +56,15 @@ export default function Header() {
           <NavLinks />
 
           {/* Desktop SearchBar */}
-          <SearchBar
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            className="hidden md:flex max-w-md flex-1 mx-8"
-          />
+          <div className="hidden md:flex max-w-md flex-1 mx-8">
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="border px-3 py-2 rounded w-full"
+            />
+          </div>
 
           <div className="flex items-center space-x-2">
             {/* Mobile Search Toggle */}
@@ -62,7 +77,7 @@ export default function Header() {
               <Search className="h-5 w-5" />
             </Button>
 
-            {/* Wishlist (only if logged in) */}
+            {/* Wishlist */}
             {user && (
               <Button variant="ghost" size="icon" asChild>
                 <a href="/wishlist" className="relative">
@@ -76,7 +91,7 @@ export default function Header() {
               </Button>
             )}
 
-            {/* Cart (only if logged in) */}
+            {/* Cart */}
             {user && (
               <Button variant="ghost" size="icon" asChild>
                 <a href="/cart" className="relative">
@@ -110,9 +125,12 @@ export default function Header() {
         {/* Mobile Search Input */}
         {isSearchOpen && (
           <div className="md:hidden py-4 border-t">
-            <SearchBar
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="border px-3 py-2 rounded w-full"
             />
           </div>
         )}

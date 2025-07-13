@@ -20,6 +20,7 @@ export function ProductGridClient() {
       rating: searchParams.get("rating") || "",
       priceMin: searchParams.get("priceMin") || "",
       priceMax: searchParams.get("priceMax") || "",
+      search: searchParams.get("search") || "",
     };
 
     setLoading(true);
