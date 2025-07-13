@@ -198,13 +198,12 @@ export default function OrdersPage() {
 
   const handleCancelOrder = (orderId) => {
     // API call to cancel order would go here
-    console.log("Cancelling order:", orderId);
+
     setCancelOrderId(null);
   };
 
   const handleReorder = (order) => {
     // Reorder logic would go here
-    console.log("Reordering:", order);
   };
 
   const canCancelOrder = (status) => {

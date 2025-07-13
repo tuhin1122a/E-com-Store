@@ -3,16 +3,22 @@
 import { useSession } from "next-auth/react";
 
 import { AccountAddresses } from "@/app/account/components/account-addresses";
-import { AccountOrders } from "@/app/account/components/account-orders";
 
 import { AccountSecurity } from "@/app/account/components/account-security";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AccountOverview } from "./account-overview/AccountOverview";
 import { AccountSidebar } from "./account-sidebar";
+import { AccountOrders } from "./orders/AccountOrders";
 import AccountProfile from "./profile/AccountProfile";
 
-export default function AccountPageClient({ user }: { user: any }) {
+export default function AccountPageClient({
+  user,
+  accessToken,
+}: {
+  user: any;
+  accessToken: string;
+}) {
   const loading = useSession().status === "loading";
   const router = useRouter();
   const [activeSection, setActiveSection] = useState("overview");
@@ -46,7 +52,7 @@ export default function AccountPageClient({ user }: { user: any }) {
       case "overview":
         return <AccountOverview />;
       case "orders":
-        return <AccountOrders />;
+        return <AccountOrders accessToken={accessToken} userId={user.id} />;
       case "profile":
         return <AccountProfile user={user} />;
       case "addresses":

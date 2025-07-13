@@ -12,7 +12,6 @@ interface RecentOrdersProps {
 }
 
 export function RecentOrders({ recentOrders }: RecentOrdersProps) {
-  console.log("RecentOrders component rendered with orders:", recentOrders);
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">

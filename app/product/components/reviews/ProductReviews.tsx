@@ -40,12 +40,11 @@ export function ProductReviews({ product }: ProductReviewsProps) {
       );
 
       if (!res.ok) {
-        throw new Error("Failed to fetch reviews");
+        throw new Errors("Failed to fetch reviews");
       }
 
       const data = await res.json();
       setReviews(data);
-      console.log("Fetched Reviews:", data);
     } catch (error) {
       console.error("Error fetching reviews:", error);
     }

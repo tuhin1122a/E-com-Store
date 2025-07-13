@@ -139,7 +139,6 @@ export default function CheckoutPage() {
 
       const result = await response.json();
       const orderNumber = result?.data?.orderNumber;
-      console.log("OrderNumber:", orderNumber);
 
       if (!response.ok) {
         throw new Error(result.error || "Order failed");
