@@ -18,6 +18,7 @@ export const getCategoryBySlug = async (slug: string) => {
     });
 
     const data = await res.json();
+    console.log("Fetched Category Data:", data);
 
     if (!res.ok || data?.success === false) {
       console.warn("Category fetch failed:", data?.message);

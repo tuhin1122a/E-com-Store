@@ -34,7 +34,6 @@ export default async function CategoryPage({
 }: CategoryPageProps) {
   const { slug } = params;
   const categoryData = await getCategoryBySlug(slug);
-  console.log(searchParams);
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb */}

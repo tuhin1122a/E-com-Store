@@ -27,7 +27,7 @@ interface Category {
 
 interface CategoryFiltersProps {
   slug: string;
-  categoryData: Category;
+  categoryData: Category | null;
   searchParams: {
     page?: string;
     sort?: string;
@@ -54,7 +54,6 @@ export function CategoryFilters({
     Number(searchParams.maxPrice) || priceRangeDefault.max,
   ]);
 
-  // Use brand slug instead of brandId
   const [selectedBrands, setSelectedBrands] = useState<string[]>(
     searchParams.brand ? searchParams.brand.split(",") : []
   );
@@ -79,7 +78,6 @@ export function CategoryFilters({
     });
 
     params.delete("page");
-
     router.push(`/category/${slug}?${params.toString()}`);
   };
 
@@ -127,7 +125,15 @@ export function CategoryFilters({
     priceRange[0] > priceRangeDefault.min ||
     priceRange[1] < priceRangeDefault.max;
 
-  const availableBrands = categoryData?.brands.filter(
+  if (!categoryData || !Array.isArray(categoryData.brands)) {
+    return (
+      <div className="text-muted-foreground text-sm">
+        Filters are unavailable at the moment.
+      </div>
+    );
+  }
+
+  const availableBrands = categoryData.brands.filter(
     (brand) => brand.productCount > 0
   );
 
@@ -151,7 +157,7 @@ export function CategoryFilters({
           </CardHeader>
           <CardContent className="pt-0 flex flex-wrap gap-2">
             {selectedBrands.map((slug) => {
-              const brand = categoryData?.brands.find((b) => b.slug === slug);
+              const brand = categoryData.brands.find((b) => b.slug === slug);
               return brand ? (
                 <Badge key={slug} variant="secondary" className="text-xs">
                   {brand.name}
