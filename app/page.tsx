@@ -11,6 +11,7 @@ import { Suspense } from "react";
 export default async function HomePage() {
   const featuredProduct = await getFeaturedProducts();
   const categoryData = await apiClient.getCategories();
+
   return (
     <div className="min-h-screen">
       <HeroSection />

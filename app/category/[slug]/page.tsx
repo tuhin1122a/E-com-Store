@@ -10,6 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { getCategoryBySlug } from "@/utility/getCategoryBySlug";
 import { Suspense } from "react";
 
 interface CategoryPageProps {
@@ -27,10 +28,13 @@ interface CategoryPageProps {
   };
 }
 
-export default function CategoryPage({
+export default async function CategoryPage({
   params,
   searchParams,
 }: CategoryPageProps) {
+  const { slug } = params;
+  const categoryData = await getCategoryBySlug(slug);
+  console.log("Category Data:", categoryData);
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb */}
@@ -63,14 +67,18 @@ export default function CategoryPage({
             <div className="h-32 bg-white rounded-lg animate-pulse mb-8" />
           }
         >
-          <CategoryHeader slug={params.slug} />
+          <CategoryHeader slug={slug} category={categoryData} />
         </Suspense>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
           <aside className="lg:w-80 flex-shrink-0">
             <div className="sticky top-4">
-              <CategoryFilters slug={params.slug} searchParams={searchParams} />
+              <CategoryFilters
+                slug={params.slug}
+                searchParams={searchParams}
+                categoryData={categoryData}
+              />
             </div>
           </aside>
 

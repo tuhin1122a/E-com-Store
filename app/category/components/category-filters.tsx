@@ -1,142 +1,141 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { Slider } from "@/components/ui/slider"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Star, X } from "lucide-react"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Star, X } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+
+interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  productCount: number;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  productCount: number;
+  brands: Brand[];
+}
 
 interface CategoryFiltersProps {
-  slug: string
+  slug: string;
+  categoryData: Category;
   searchParams: {
-    page?: string
-    sort?: string
-    minPrice?: string
-    maxPrice?: string
-    brand?: string
-    rating?: string
-    inStock?: string
-  }
+    page?: string;
+    sort?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    brand?: string;
+    rating?: string;
+    inStock?: string;
+  };
 }
 
-// Mock filter data - replace with API calls
-const getFilterData = (slug: string) => {
-  return {
-    priceRange: { min: 0, max: 500 },
-    brands: [
-      { id: "apple", name: "Apple", count: 45 },
-      { id: "samsung", name: "Samsung", count: 38 },
-      { id: "nike", name: "Nike", count: 29 },
-      { id: "adidas", name: "Adidas", count: 24 },
-      { id: "sony", name: "Sony", count: 19 },
-      { id: "lg", name: "LG", count: 15 },
-      { id: "dell", name: "Dell", count: 12 },
-      { id: "hp", name: "HP", count: 10 },
-    ],
-    ratings: [
-      { rating: 5, count: 156 },
-      { rating: 4, count: 234 },
-      { rating: 3, count: 89 },
-      { rating: 2, count: 23 },
-      { rating: 1, count: 12 },
-    ],
-  }
-}
+export function CategoryFilters({
+  slug,
+  categoryData,
+  searchParams,
+}: CategoryFiltersProps) {
+  const router = useRouter();
+  const urlSearchParams = useSearchParams();
 
-export function CategoryFilters({ slug, searchParams }: CategoryFiltersProps) {
-  const router = useRouter()
-  const urlSearchParams = useSearchParams()
+  // Default price range — replace with real min/max from API if available
+  const priceRangeDefault = { min: 0, max: 500 };
 
-  const filterData = getFilterData(slug)
-
-  const [priceRange, setPriceRange] = useState([
-    Number(searchParams.minPrice) || filterData.priceRange.min,
-    Number(searchParams.maxPrice) || filterData.priceRange.max,
-  ])
+  const [priceRange, setPriceRange] = useState<number[]>([
+    Number(searchParams.minPrice) || priceRangeDefault.min,
+    Number(searchParams.maxPrice) || priceRangeDefault.max,
+  ]);
 
   const [selectedBrands, setSelectedBrands] = useState<string[]>(
-    searchParams.brand ? searchParams.brand.split(",") : [],
-  )
+    searchParams.brand ? searchParams.brand.split(",") : []
+  );
 
   const [selectedRating, setSelectedRating] = useState<number | null>(
-    searchParams.rating ? Number(searchParams.rating) : null,
-  )
+    searchParams.rating ? Number(searchParams.rating) : null
+  );
 
-  const [inStockOnly, setInStockOnly] = useState(searchParams.inStock === "true")
+  const [inStockOnly, setInStockOnly] = useState(
+    searchParams.inStock === "true"
+  );
 
   const updateURL = (updates: Record<string, string | null>) => {
-    const params = new URLSearchParams(urlSearchParams.toString())
+    const params = new URLSearchParams(urlSearchParams.toString());
 
     Object.entries(updates).forEach(([key, value]) => {
-      if (value === null || value === "") {
-        params.delete(key)
+      if (!value) {
+        params.delete(key);
       } else {
-        params.set(key, value)
+        params.set(key, value);
       }
-    })
+    });
 
-    // Reset to first page when filters change
-    params.delete("page")
+    // Reset page to 1 on filter change
+    params.delete("page");
 
-    router.push(`/category/${slug}?${params.toString()}`)
-  }
+    router.push(`/category/${slug}?${params.toString()}`);
+  };
 
   const handleBrandChange = (brandId: string, checked: boolean) => {
-    let newBrands: string[]
-    if (checked) {
-      newBrands = [...selectedBrands, brandId]
-    } else {
-      newBrands = selectedBrands.filter((id) => id !== brandId)
-    }
+    const updated = checked
+      ? [...selectedBrands, brandId]
+      : selectedBrands.filter((id) => id !== brandId);
 
-    setSelectedBrands(newBrands)
-    updateURL({ brand: newBrands.length > 0 ? newBrands.join(",") : null })
-  }
-
-  const handlePriceChange = (values: number[]) => {
-    setPriceRange(values)
-  }
+    setSelectedBrands(updated);
+    updateURL({ brand: updated.length ? updated.join(",") : null });
+  };
 
   const applyPriceFilter = () => {
     updateURL({
-      minPrice: priceRange[0] > filterData.priceRange.min ? priceRange[0].toString() : null,
-      maxPrice: priceRange[1] < filterData.priceRange.max ? priceRange[1].toString() : null,
-    })
-  }
+      minPrice:
+        priceRange[0] > priceRangeDefault.min ? priceRange[0].toString() : null,
+      maxPrice:
+        priceRange[1] < priceRangeDefault.max ? priceRange[1].toString() : null,
+    });
+  };
 
   const handleRatingChange = (rating: number) => {
-    const newRating = selectedRating === rating ? null : rating
-    setSelectedRating(newRating)
-    updateURL({ rating: newRating?.toString() || null })
-  }
+    const newRating = selectedRating === rating ? null : rating;
+    setSelectedRating(newRating);
+    updateURL({ rating: newRating?.toString() || null });
+  };
 
   const handleInStockChange = (checked: boolean) => {
-    setInStockOnly(checked)
-    updateURL({ inStock: checked ? "true" : null })
-  }
+    setInStockOnly(checked);
+    updateURL({ inStock: checked ? "true" : null });
+  };
 
   const clearAllFilters = () => {
-    setPriceRange([filterData.priceRange.min, filterData.priceRange.max])
-    setSelectedBrands([])
-    setSelectedRating(null)
-    setInStockOnly(false)
-    router.push(`/category/${slug}`)
-  }
+    setPriceRange([priceRangeDefault.min, priceRangeDefault.max]);
+    setSelectedBrands([]);
+    setSelectedRating(null);
+    setInStockOnly(false);
+    router.push(`/category/${slug}`);
+  };
 
   const hasActiveFilters =
     selectedBrands.length > 0 ||
     selectedRating !== null ||
     inStockOnly ||
-    priceRange[0] > filterData.priceRange.min ||
-    priceRange[1] < filterData.priceRange.max
+    priceRange[0] > priceRangeDefault.min ||
+    priceRange[1] < priceRangeDefault.max;
+
+  // Filter brands to only those with productCount > 0
+  const availableBrands = categoryData.brands.filter(
+    (brand) => brand.productCount > 0
+  );
 
   return (
     <div className="space-y-6">
-      {/* Filter Header */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Filters</h2>
         {hasActiveFilters && (
@@ -152,75 +151,74 @@ export function CategoryFilters({ slug, searchParams }: CategoryFiltersProps) {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Active Filters</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex flex-wrap gap-2">
-              {selectedBrands.map((brandId) => {
-                const brand = filterData.brands.find((b) => b.id === brandId)
-                return brand ? (
-                  <Badge key={brandId} variant="secondary" className="text-xs">
-                    {brand.name}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto p-0 ml-1"
-                      onClick={() => handleBrandChange(brandId, false)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                ) : null
-              })}
-
-              {selectedRating && (
-                <Badge variant="secondary" className="text-xs">
-                  {selectedRating}+ Stars
+          <CardContent className="pt-0 flex flex-wrap gap-2">
+            {selectedBrands.map((id) => {
+              const brand = categoryData.brands.find((b) => b.id === id);
+              return brand ? (
+                <Badge key={id} variant="secondary" className="text-xs">
+                  {brand.name}
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-auto p-0 ml-1"
-                    onClick={() => handleRatingChange(selectedRating)}
+                    onClick={() => handleBrandChange(id, false)}
                   >
                     <X className="h-3 w-3" />
                   </Button>
                 </Badge>
-              )}
-
-              {inStockOnly && (
-                <Badge variant="secondary" className="text-xs">
-                  In Stock
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-auto p-0 ml-1"
-                    onClick={() => handleInStockChange(false)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </Badge>
-              )}
-
-              {(priceRange[0] > filterData.priceRange.min || priceRange[1] < filterData.priceRange.max) && (
-                <Badge variant="secondary" className="text-xs">
-                  ${priceRange[0]} - ${priceRange[1]}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-auto p-0 ml-1"
-                    onClick={() => {
-                      setPriceRange([filterData.priceRange.min, filterData.priceRange.max])
-                      updateURL({ minPrice: null, maxPrice: null })
-                    }}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </Badge>
-              )}
-            </div>
+              ) : null;
+            })}
+            {selectedRating && (
+              <Badge variant="secondary" className="text-xs">
+                {selectedRating}+ Stars
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 ml-1"
+                  onClick={() => handleRatingChange(selectedRating)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </Badge>
+            )}
+            {inStockOnly && (
+              <Badge variant="secondary" className="text-xs">
+                In Stock
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 ml-1"
+                  onClick={() => handleInStockChange(false)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </Badge>
+            )}
+            {(priceRange[0] > priceRangeDefault.min ||
+              priceRange[1] < priceRangeDefault.max) && (
+              <Badge variant="secondary" className="text-xs">
+                ${priceRange[0]} - ${priceRange[1]}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 ml-1"
+                  onClick={() => {
+                    setPriceRange([
+                      priceRangeDefault.min,
+                      priceRangeDefault.max,
+                    ]);
+                    updateURL({ minPrice: null, maxPrice: null });
+                  }}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </Badge>
+            )}
           </CardContent>
         </Card>
       )}
 
-      {/* Price Range Filter */}
+      {/* Price Filter */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Price Range</CardTitle>
@@ -229,10 +227,9 @@ export function CategoryFilters({ slug, searchParams }: CategoryFiltersProps) {
           <div className="space-y-4">
             <Slider
               value={priceRange}
-              onValueChange={handlePriceChange}
-              max={filterData.priceRange.max}
+              onValueChange={setPriceRange}
+              max={priceRangeDefault.max}
               step={10}
-              className="w-full"
             />
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>${priceRange[0]}</span>
@@ -245,14 +242,18 @@ export function CategoryFilters({ slug, searchParams }: CategoryFiltersProps) {
         </CardContent>
       </Card>
 
-      {/* Availability Filter */}
+      {/* In Stock */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Availability</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-2">
-            <Checkbox id="in-stock" checked={inStockOnly} onCheckedChange={handleInStockChange} />
+            <Checkbox
+              id="in-stock"
+              checked={inStockOnly}
+              onCheckedChange={handleInStockChange}
+            />
             <Label htmlFor="in-stock" className="text-sm cursor-pointer">
               In Stock Only
             </Label>
@@ -267,17 +268,24 @@ export function CategoryFilters({ slug, searchParams }: CategoryFiltersProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3 max-h-64 overflow-y-auto">
-            {filterData.brands.map((brand) => (
+            {availableBrands.map((brand) => (
               <div key={brand.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={brand.id}
                   checked={selectedBrands.includes(brand.id)}
-                  onCheckedChange={(checked) => handleBrandChange(brand.id, checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    handleBrandChange(brand.id, checked as boolean)
+                  }
                 />
-                <Label htmlFor={brand.id} className="flex-1 text-sm cursor-pointer">
+                <Label
+                  htmlFor={brand.id}
+                  className="flex-1 text-sm cursor-pointer"
+                >
                   {brand.name}
                 </Label>
-                <span className="text-xs text-muted-foreground">({brand.count})</span>
+                <span className="text-xs text-muted-foreground">
+                  ({brand.productCount})
+                </span>
               </div>
             ))}
           </div>
@@ -290,29 +298,30 @@ export function CategoryFilters({ slug, searchParams }: CategoryFiltersProps) {
           <CardTitle className="text-base">Customer Rating</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {filterData.ratings.map((item) => (
-              <div
-                key={item.rating}
-                className="flex items-center space-x-2 cursor-pointer"
-                onClick={() => handleRatingChange(item.rating)}
-              >
-                <Checkbox checked={selectedRating === item.rating} readOnly />
-                <div className="flex items-center space-x-1 flex-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-3 w-3 ${i < item.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
-                    />
-                  ))}
-                  <span className="text-sm ml-1">& Up</span>
-                </div>
-                <span className="text-xs text-muted-foreground">({item.count})</span>
+          {[5, 4, 3, 2, 1].map((rating) => (
+            <div
+              key={rating}
+              className="flex items-center space-x-2 cursor-pointer"
+              onClick={() => handleRatingChange(rating)}
+            >
+              <Checkbox checked={selectedRating === rating} readOnly />
+              <div className="flex items-center space-x-1 flex-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-3 w-3 ${
+                      i < rating
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-300"
+                    }`}
+                  />
+                ))}
+                <span className="text-sm ml-1">& Up</span>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

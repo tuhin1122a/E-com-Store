@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -5,20 +7,36 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import apiClient from "@/lib/api";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-const categories = [
-  "Electronics",
-  "Clothing",
-  "Home & Garden",
-  "Sports",
-  "Books",
-  "Beauty",
-  "Toys",
-  "Automotive",
-];
+// Define the correct shape of category
+type Category = {
+  id: string;
+  name: string;
+  slug: string;
+  productCount: number;
+  brands: any[]; // You can make this more specific if needed
+};
 
 export default function CategoryDropdown() {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const getCategories = async () => {
+      try {
+        const response = await apiClient.getCategories();
+        console.log("Fetched Categories:", response.data);
+        setCategories(response.data); // Set the array directly
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    };
+
+    getCategories();
+  }, []);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -26,12 +44,8 @@ export default function CategoryDropdown() {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-48">
         {categories.map((category) => (
-          <DropdownMenuItem key={category} asChild>
-            <Link
-              href={`/category/${category.toLowerCase().replace(" & ", "-").replace(" ", "-")}`}
-            >
-              {category}
-            </Link>
+          <DropdownMenuItem key={category.id} asChild>
+            <Link href={`/category/${category.slug}`}>{category.name}</Link>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
