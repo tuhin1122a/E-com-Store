@@ -27,7 +27,6 @@ export default function CategoryDropdown() {
     const getCategories = async () => {
       try {
         const response = await apiClient.getCategories();
-        console.log("Fetched Categories:", response.data);
         setCategories(response.data); // Set the array directly
       } catch (error) {
         console.error("Failed to fetch categories:", error);

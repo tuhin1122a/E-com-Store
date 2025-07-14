@@ -47,7 +47,6 @@ export function CategoryFilters({
   const router = useRouter();
   const urlSearchParams = useSearchParams();
 
-  // Default price range — replace with real min/max from API if available
   const priceRangeDefault = { min: 0, max: 500 };
 
   const [priceRange, setPriceRange] = useState<number[]>([
@@ -55,6 +54,7 @@ export function CategoryFilters({
     Number(searchParams.maxPrice) || priceRangeDefault.max,
   ]);
 
+  // Use brand slug instead of brandId
   const [selectedBrands, setSelectedBrands] = useState<string[]>(
     searchParams.brand ? searchParams.brand.split(",") : []
   );
@@ -78,16 +78,15 @@ export function CategoryFilters({
       }
     });
 
-    // Reset page to 1 on filter change
     params.delete("page");
 
     router.push(`/category/${slug}?${params.toString()}`);
   };
 
-  const handleBrandChange = (brandId: string, checked: boolean) => {
+  const handleBrandChange = (brandSlug: string, checked: boolean) => {
     const updated = checked
-      ? [...selectedBrands, brandId]
-      : selectedBrands.filter((id) => id !== brandId);
+      ? [...selectedBrands, brandSlug]
+      : selectedBrands.filter((slug) => slug !== brandSlug);
 
     setSelectedBrands(updated);
     updateURL({ brand: updated.length ? updated.join(",") : null });
@@ -128,7 +127,6 @@ export function CategoryFilters({
     priceRange[0] > priceRangeDefault.min ||
     priceRange[1] < priceRangeDefault.max;
 
-  // Filter brands to only those with productCount > 0
   const availableBrands = categoryData.brands.filter(
     (brand) => brand.productCount > 0
   );
@@ -152,16 +150,16 @@ export function CategoryFilters({
             <CardTitle className="text-sm">Active Filters</CardTitle>
           </CardHeader>
           <CardContent className="pt-0 flex flex-wrap gap-2">
-            {selectedBrands.map((id) => {
-              const brand = categoryData.brands.find((b) => b.id === id);
+            {selectedBrands.map((slug) => {
+              const brand = categoryData.brands.find((b) => b.slug === slug);
               return brand ? (
-                <Badge key={id} variant="secondary" className="text-xs">
+                <Badge key={slug} variant="secondary" className="text-xs">
                   {brand.name}
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-auto p-0 ml-1"
-                    onClick={() => handleBrandChange(id, false)}
+                    onClick={() => handleBrandChange(slug, false)}
                   >
                     <X className="h-3 w-3" />
                   </Button>
@@ -271,14 +269,14 @@ export function CategoryFilters({
             {availableBrands.map((brand) => (
               <div key={brand.id} className="flex items-center space-x-2">
                 <Checkbox
-                  id={brand.id}
-                  checked={selectedBrands.includes(brand.id)}
+                  id={brand.slug}
+                  checked={selectedBrands.includes(brand.slug)}
                   onCheckedChange={(checked) =>
-                    handleBrandChange(brand.id, checked as boolean)
+                    handleBrandChange(brand.slug, checked as boolean)
                   }
                 />
                 <Label
-                  htmlFor={brand.id}
+                  htmlFor={brand.slug}
                   className="flex-1 text-sm cursor-pointer"
                 >
                   {brand.name}
