@@ -127,7 +127,7 @@ export function CategoryFilters({
     priceRange[0] > priceRangeDefault.min ||
     priceRange[1] < priceRangeDefault.max;
 
-  const availableBrands = categoryData.brands.filter(
+  const availableBrands = categoryData?.brands.filter(
     (brand) => brand.productCount > 0
   );
 
@@ -151,7 +151,7 @@ export function CategoryFilters({
           </CardHeader>
           <CardContent className="pt-0 flex flex-wrap gap-2">
             {selectedBrands.map((slug) => {
-              const brand = categoryData.brands.find((b) => b.slug === slug);
+              const brand = categoryData?.brands.find((b) => b.slug === slug);
               return brand ? (
                 <Badge key={slug} variant="secondary" className="text-xs">
                   {brand.name}
