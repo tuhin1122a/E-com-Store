@@ -66,7 +66,7 @@ export default async function CategoryPage({
             <div className="h-32 bg-white rounded-lg animate-pulse mb-8" />
           }
         >
-          <CategoryHeader slug={slug} category={categoryData} />
+          <CategoryHeader slug={slug} category={categoryData.data} />
         </Suspense>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -76,7 +76,7 @@ export default async function CategoryPage({
               <CategoryFilters
                 slug={params.slug}
                 searchParams={searchParams}
-                categoryData={categoryData}
+                categoryData={categoryData.data}
               />
             </div>
           </aside>
