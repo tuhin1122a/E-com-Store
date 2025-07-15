@@ -1,50 +1,25 @@
-"use client";
+import CartClient from "./components/CartClient";
 
-import { CartItems } from "@/app/cart/components/cart-items";
-import { useCart } from "@/context/CartContext";
-import { useSession } from "next-auth/react";
-import { CartSummary } from "./components/cart-summary";
+export const metadata = {
+  title: "Your Shopping Cart - EcomStore",
+  description:
+    "View and manage the items in your EcomStore cart. Adjust quantities, remove products, and proceed to checkout.",
+  robots: "noindex, nofollow", // protects user-specific data
+  openGraph: {
+    title: "Your Shopping Cart - EcomStore",
+    description:
+      "Manage the items in your cart and prepare for checkout at EcomStore.",
+    url: "https://yourdomain.com/cart", // Replace with your domain
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Your Shopping Cart - EcomStore",
+    description:
+      "Quickly manage your cart and proceed to checkout on EcomStore.",
+  },
+};
 
 export default function CartPage() {
-  const { data: session } = useSession();
-  const accessToken = session?.user?.accessToken;
-
-  const {
-    cartItems,
-    loading,
-    removeFromCart,
-    fetchCart,
-    updateCartItemQuantity,
-  } = useCart();
-
-  const updateQuantity = async (productId: string, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      await removeFromCart(productId);
-    } else {
-      await updateCartItemQuantity(productId, newQuantity); // ✅ working now
-    }
-  };
-
-  const removeItem = async (productId: string) => {
-    await removeFromCart(productId);
-  };
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
-      <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <CartItems
-            items={cartItems}
-            updateQuantity={updateQuantity}
-            removeItem={removeItem}
-            accessToken={accessToken}
-          />
-        </div>
-        <div>
-          <CartSummary items={cartItems} />
-        </div>
-      </div>
-    </div>
-  );
+  return <CartClient />;
 }
