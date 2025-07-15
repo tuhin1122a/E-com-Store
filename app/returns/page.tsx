@@ -1,3 +1,23 @@
+export const metadata = {
+  title: "Returns & Exchanges - EcomStore",
+  description:
+    "Learn about our return policy, eligible items, refund process, and how to exchange products at EcomStore.",
+  openGraph: {
+    title: "Returns & Exchanges - EcomStore",
+    description:
+      "Learn about our return policy, eligible items, refund process, and how to exchange products at EcomStore.",
+    url: "https://yourdomain.com/returns",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Returns & Exchanges - EcomStore",
+    description:
+      "Learn about our return policy, eligible items, refund process, and how to exchange products at EcomStore.",
+  },
+  robots: "index, follow",
+};
+
 export default function ReturnsPage() {
   return (
     <div className="container mx-auto px-4 py-16 max-w-4xl">
@@ -7,8 +27,9 @@ export default function ReturnsPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Return Policy</h2>
           <p className="mb-4">
-            We want you to be completely satisfied with your purchase. If you're not happy with your order, you can
-            return most items within 30 days of delivery for a full refund.
+            We want you to be completely satisfied with your purchase. If you're
+            not happy with your order, you can return most items within 30 days
+            of delivery for a full refund.
           </p>
         </section>
 
@@ -47,23 +68,26 @@ export default function ReturnsPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Refund Process</h2>
           <p className="mb-4">
-            Once we receive your return, we'll inspect the item and process your refund within 5-7 business days.
-            Refunds will be issued to your original payment method.
+            Once we receive your return, we'll inspect the item and process your
+            refund within 5-7 business days. Refunds will be issued to your
+            original payment method.
           </p>
         </section>
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Exchanges</h2>
           <p className="mb-4">
-            We currently don't offer direct exchanges. To exchange an item, please return the original item for a refund
-            and place a new order for the desired item.
+            We currently don't offer direct exchanges. To exchange an item,
+            please return the original item for a refund and place a new order
+            for the desired item.
           </p>
         </section>
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Questions?</h2>
           <p className="mb-4">
-            If you have any questions about returns or need assistance, please contact our customer service team:
+            If you have any questions about returns or need assistance, please
+            contact our customer service team:
           </p>
           <ul className="list-none mb-4">
             <li>Email: returns@ecomstore.com</li>
@@ -73,5 +97,5 @@ export default function ReturnsPage() {
         </section>
       </div>
     </div>
-  )
+  );
 }
