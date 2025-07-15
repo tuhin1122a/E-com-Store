@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     "ecommerce, online shopping, electronics, clothing, home goods, deals",
   authors: [{ name: "EcomStore Team" }],
   icons: {
-    icon: "/favicon.png", // 👉 Favicon path (must be inside /public)
+    icon: "/favicons.png", // 👉 Favicon path (must be inside /public)
   },
   openGraph: {
     title: "EcomStore - Your Online Shopping Destination",
