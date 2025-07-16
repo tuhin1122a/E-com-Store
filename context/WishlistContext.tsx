@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -11,7 +12,7 @@ import {
 
 interface WishlistProduct {
   productId: string;
-  // অন্যান্য প্রপার্টিজ যদি থাকে তাহলে এখানে যোগ করতে পারো
+  // Add other properties if needed
 }
 
 interface WishlistContextType {
@@ -24,6 +25,7 @@ interface WishlistContextType {
   fetchWishlist: () => Promise<void>;
   addToWishlist: (productId: string) => Promise<void>;
   removeFromWishlist: (productId: string) => Promise<void>;
+  toggleWishlist: (productId: string) => Promise<void>;
   isInWishlist: (productId: string) => boolean;
 
   toggleSelectItem: (productId: string) => void;
@@ -79,11 +81,24 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
     fetchWishlist();
   }, [accessToken]);
 
+  const isInWishlist = useCallback(
+    (productId: string) =>
+      wishlistItems.some((item) => item.productId === productId),
+    [wishlistItems]
+  );
+
   const addToWishlist = async (productId: string) => {
     if (!accessToken) {
       alert("Login required");
       return;
     }
+
+    const prevItems = [...wishlistItems];
+    if (isInWishlist(productId)) return;
+
+    // Optimistic update
+    setWishlistItems((prev) => [...prev, { productId }]);
+
     try {
       const res = await fetch(`${apiUrl}/wishlist/add`, {
         method: "POST",
@@ -93,11 +108,12 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
         },
         body: JSON.stringify({ productId }),
       });
+
       if (!res.ok) throw new Error("Failed to add to wishlist");
-      setWishlistItems((prev) => [...prev, { productId }]);
     } catch (err) {
       console.error(err);
       alert("Could not add to wishlist");
+      setWishlistItems(prevItems); // rollback
     }
   };
 
@@ -106,6 +122,16 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
       alert("Login required");
       return;
     }
+
+    const prevItems = [...wishlistItems];
+    if (!isInWishlist(productId)) return;
+
+    // Optimistic remove
+    setWishlistItems((prev) =>
+      prev.filter((item) => item.productId !== productId)
+    );
+    setSelectedItems((prev) => prev.filter((id) => id !== productId));
+
     try {
       const res = await fetch(`${apiUrl}/wishlist/delete/${productId}`, {
         method: "DELETE",
@@ -113,22 +139,24 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
           Authorization: `Bearer ${accessToken}`,
         },
       });
+
       if (!res.ok) throw new Error("Failed to remove from wishlist");
-      setWishlistItems((prev) =>
-        prev.filter((item) => item.productId !== productId)
-      );
-      setSelectedItems((prev) => prev.filter((id) => id !== productId));
     } catch (err) {
       console.error(err);
       alert("Could not remove from wishlist");
+      setWishlistItems(prevItems); // rollback
     }
   };
 
-  const isInWishlist = (productId: string) =>
-    wishlistItems.some((item) => item.productId === productId);
+  const toggleWishlist = async (productId: string) => {
+    if (isInWishlist(productId)) {
+      await removeFromWishlist(productId);
+    } else {
+      await addToWishlist(productId);
+    }
+  };
 
   // Selection logic
-
   const toggleSelectItem = (productId: string) => {
     setSelectedItems((prev) =>
       prev.includes(productId)
@@ -171,6 +199,34 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const addSelectedToCart = async () => {
+    if (!accessToken) {
+      alert("Login required");
+      return;
+    }
+
+    try {
+      const responses = await Promise.all(
+        selectedItems.map((productId) =>
+          fetch(`${apiUrl}/cart/add`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({ productId }),
+          })
+        )
+      );
+
+      const failed = responses.find((res) => !res.ok);
+      if (failed) throw new Error("Some items failed to add to cart");
+    } catch (err) {
+      console.error("Failed to add selected to cart:", err);
+      alert("Failed to add selected items to cart");
+    }
+  };
+
   const isAllSelected =
     selectedItems.length > 0 && selectedItems.length === wishlistItems.length;
 
@@ -185,10 +241,12 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
         fetchWishlist,
         addToWishlist,
         removeFromWishlist,
+        toggleWishlist,
         isInWishlist,
         toggleSelectItem,
         toggleSelectAll,
         removeSelected,
+        addSelectedToCart,
       }}
     >
       {children}
