@@ -17,6 +17,8 @@ interface CartItem {
     name: string;
     price: number;
     image?: string;
+    images?: { url: string }[];
+    status?: boolean;
   };
   quantity: number;
   price: number;
@@ -35,6 +37,7 @@ interface CartContextType {
   ) => Promise<void>;
   isInCart: (productId: string) => boolean;
   addSelectedToCart: (productIds: string[]) => Promise<void>;
+  initializeCart: (items: CartItem[]) => void; // ✅ added
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -87,6 +90,10 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     );
   };
 
+  const initializeCart = (items: CartItem[]) => {
+    setCartItems(items);
+  };
+
   const addToCart = async (productId: string, quantity = 1) => {
     if (!token || !API_BASE_URL) return;
 
@@ -115,7 +122,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
           _id: productId,
           productId,
           quantity,
-          price: 0, // price may be updated after fetch
+          price: 0, // will sync later
         },
       ]);
     }
@@ -130,11 +137,9 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         body: JSON.stringify({ productId, quantity }),
       });
 
-      if (!res.ok) {
-        throw new Error("Add to cart failed");
-      }
+      if (!res.ok) throw new Error("Add to cart failed");
 
-      await fetchCart(); // Sync latest cart
+      await fetchCart();
     } catch (error) {
       console.error("Add to cart failed", error);
       setCartItems(prevCart); // 🔁 Rollback
@@ -164,11 +169,9 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         },
       });
 
-      if (!res.ok) {
-        throw new Error("Remove from cart failed");
-      }
+      if (!res.ok) throw new Error("Remove from cart failed");
 
-      await fetchCart(); // Sync
+      await fetchCart();
     } catch (error) {
       console.error("Remove from cart failed", error);
       setCartItems(prevCart); // 🔁 Rollback
@@ -204,11 +207,9 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         body: JSON.stringify({ productId, quantity }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to update cart quantity");
-      }
+      if (!res.ok) throw new Error("Failed to update cart quantity");
 
-      await fetchCart(); // Sync with backend
+      await fetchCart();
     } catch (error) {
       console.error("Update quantity failed:", error);
       setCartItems(prevCart); // 🔁 Rollback
@@ -241,7 +242,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         return;
       }
 
-      // ✅ Optimistic update (basic placeholder)
+      // ✅ Optimistic update
       setCartItems((prev) => [
         ...prev,
         ...filteredItems.map((id) => ({
@@ -270,7 +271,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     } catch (error) {
       console.error("Failed to add selected items to cart:", error);
       alert("Something went wrong while adding to cart.");
-      await fetchCart(); // Try to recover state
+      await fetchCart();
     }
   };
 
@@ -285,6 +286,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         updateCartItemQuantity,
         isInCart,
         addSelectedToCart,
+        initializeCart, // ✅ exposed
       }}
     >
       {children}

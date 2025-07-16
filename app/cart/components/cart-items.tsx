@@ -3,12 +3,40 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useCart } from "@/context/CartContext";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect } from "react";
 
-export function CartItems({ items, updateQuantity, removeItem }) {
-  if (items.length === 0) {
+export function CartItems({ cartData }: { cartData: any[] }) {
+  console.log("CartItems rendered with data:", cartData);
+  const { cartItems, removeFromCart, updateCartItemQuantity, initializeCart } =
+    useCart();
+
+  const hasClientData = cartItems.length > 0;
+  const dataToRender = hasClientData ? cartItems : cartData;
+
+  // Initialize context with server data on first load
+  useEffect(() => {
+    if (!hasClientData && cartData.length > 0) {
+      initializeCart(cartData);
+    }
+  }, [hasClientData, cartData, initializeCart]);
+
+  const updateQuantity = async (productId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      await removeFromCart(productId);
+    } else {
+      await updateCartItemQuantity(productId, newQuantity);
+    }
+  };
+
+  const removeItem = async (productId: string) => {
+    await removeFromCart(productId);
+  };
+
+  if (dataToRender.length === 0) {
     return (
       <Card>
         <CardContent className="py-16 text-center">
@@ -26,8 +54,8 @@ export function CartItems({ items, updateQuantity, removeItem }) {
 
   return (
     <div className="space-y-4">
-      {items.map((item, index) => (
-        <div key={item.id}>
+      {dataToRender.map((item, index) => (
+        <div key={item._id}>
           <Card>
             <CardContent className="p-6">
               <div className="flex gap-4">
@@ -108,7 +136,7 @@ export function CartItems({ items, updateQuantity, removeItem }) {
               </div>
             </CardContent>
           </Card>
-          {index < items.length - 1 && <Separator />}
+          {index < dataToRender.length - 1 && <Separator />}
         </div>
       ))}
     </div>

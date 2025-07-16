@@ -1,14 +1,17 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
-import { useSession } from "next-auth/react";
 import { CartItems } from "./cart-items";
 import { CartSummary } from "./cart-summary";
 
-export default function CartClient() {
-  const { data: session } = useSession();
-  const accessToken = session?.user?.accessToken;
-
+export default function CartClient({
+  cartData,
+  token,
+}: {
+  cartData: any;
+  token: string;
+}) {
+  console.log("CartClient rendered with data:", cartData);
   const {
     cartItems,
     loading,
@@ -36,13 +39,15 @@ export default function CartClient() {
         <div className="lg:col-span-2">
           <CartItems
             items={cartItems}
+            cart
             updateQuantity={updateQuantity}
             removeItem={removeItem}
-            accessToken={accessToken}
+            accessToken={token}
+            cartData={cartData}
           />
         </div>
         <div>
-          <CartSummary items={cartItems} />
+          <CartSummary items={cartItems} cartData={cartData} />
         </div>
       </div>
     </div>

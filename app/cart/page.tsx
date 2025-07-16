@@ -1,3 +1,5 @@
+import { auth } from "@/auth";
+import { fetchCartFromAPI } from "@/utility/fetchCartFromAPI";
 import CartClient from "./components/CartClient";
 
 export const metadata = {
@@ -20,6 +22,9 @@ export const metadata = {
   },
 };
 
-export default function CartPage() {
-  return <CartClient />;
+export default async function CartPage() {
+  const session = await auth();
+  const token = session?.user?.accessToken;
+  const cartData = await fetchCartFromAPI(token);
+  return <CartClient cartData={cartData} token={token} />;
 }
