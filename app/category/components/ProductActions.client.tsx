@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Heart, ShoppingCart, X } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
@@ -20,29 +20,35 @@ export function ProductActions({ productId }: ProductActionsProps) {
   const { isInCart, addToCart, removeFromCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
-  const [loadingWishlist, setLoadingWishlist] = useState(false);
-  const [loadingCart, setLoadingCart] = useState(false);
+  // ✅ Local UI State
+  const [inCartUI, setInCartUI] = useState(false);
+  const [inWishlistUI, setInWishlistUI] = useState(false);
 
-  const inCart = isInCart(productId);
-  const inWishlist = isInWishlist(productId);
+  // ✅ Sync local UI with actual context state on mount or changes
+  useEffect(() => {
+    setInCartUI(isInCart(productId));
+  }, [isInCart, productId]);
+
+  useEffect(() => {
+    setInWishlistUI(isInWishlist(productId));
+  }, [isInWishlist, productId]);
 
   const toggleWishlist = async () => {
     if (!accessToken) {
       alert("Login required.");
       return;
     }
-    setLoadingWishlist(true);
+
+    setInWishlistUI((prev) => !prev); // optimistic
     try {
-      if (inWishlist) {
+      if (inWishlistUI) {
         await removeFromWishlist(productId);
       } else {
         await addToWishlist(productId);
       }
     } catch (err) {
       console.error("Wishlist toggle failed:", err);
-      alert("Wishlist update failed.");
-    } finally {
-      setLoadingWishlist(false);
+      setInWishlistUI((prev) => !prev); // rollback
     }
   };
 
@@ -51,18 +57,17 @@ export function ProductActions({ productId }: ProductActionsProps) {
       alert("Login required.");
       return;
     }
-    setLoadingCart(true);
+
+    setInCartUI((prev) => !prev); // optimistic
     try {
-      if (inCart) {
+      if (inCartUI) {
         await removeFromCart(productId);
       } else {
-        await addToCart(productId, 1); // ✅ FIXED: Correct usage
+        await addToCart(productId, 1);
       }
     } catch (err) {
       console.error("Cart toggle failed:", err);
-      alert("Cart update failed.");
-    } finally {
-      setLoadingCart(false);
+      setInCartUI((prev) => !prev); // rollback
     }
   };
 
@@ -73,12 +78,11 @@ export function ProductActions({ productId }: ProductActionsProps) {
         size="icon"
         className="absolute top-2 right-2 bg-white/80 hover:bg-white"
         onClick={toggleWishlist}
-        disabled={loadingWishlist}
       >
         <Heart
           className={cn(
             "h-4 w-4",
-            inWishlist ? "fill-red-500 text-red-500" : "text-gray-600"
+            inWishlistUI ? "fill-red-500 text-red-500" : "text-gray-600"
           )}
         />
       </Button>
@@ -87,16 +91,13 @@ export function ProductActions({ productId }: ProductActionsProps) {
         <Button
           className={cn(
             "w-full",
-            inCart
+            inCartUI
               ? "bg-red-600 hover:bg-red-700 text-white"
               : "bg-primary hover:bg-primary-dark text-white"
           )}
           onClick={toggleCart}
-          disabled={loadingCart}
         >
-          {loadingCart ? (
-            "Processing..."
-          ) : inCart ? (
+          {inCartUI ? (
             <>
               <X className="h-4 w-4 mr-2" />
               Remove from Cart

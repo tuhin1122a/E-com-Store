@@ -29,6 +29,10 @@ interface CartContextType {
   fetchCart: () => Promise<void>;
   addToCart: (productId: string, quantity?: number) => Promise<void>;
   removeFromCart: (productId: string) => Promise<void>;
+  updateCartItemQuantity: (
+    productId: string,
+    quantity: number
+  ) => Promise<void>;
   isInCart: (productId: string) => boolean;
   addSelectedToCart: (productIds: string[]) => Promise<void>;
 }
@@ -74,46 +78,6 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     }
   }, [session]);
 
-  const addToCart = async (productId: string, quantity = 1) => {
-    if (!token || !API_BASE_URL) return;
-    try {
-      const res = await fetch(`${API_BASE_URL}/cart/add`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ productId, quantity }),
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Add to cart failed");
-      }
-      await fetchCart();
-    } catch (error) {
-      console.error("Add to cart failed", error);
-    }
-  };
-
-  const removeFromCart = async (productId: string) => {
-    if (!token || !API_BASE_URL) return;
-    try {
-      const res = await fetch(`${API_BASE_URL}/cart/remove/${productId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Remove from cart failed");
-      }
-      await fetchCart();
-    } catch (error) {
-      console.error("Remove from cart failed", error);
-    }
-  };
-
   const isInCart = (productId: string) => {
     return cartItems.some(
       (item) =>
@@ -123,7 +87,134 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     );
   };
 
-  // অতিরিক্ত: একাধিক প্রোডাক্ট একসাথে cart এ add করার জন্য ফাংশন
+  const addToCart = async (productId: string, quantity = 1) => {
+    if (!token || !API_BASE_URL) return;
+
+    const prevCart = [...cartItems];
+
+    const existingItem = cartItems.find(
+      (item) =>
+        item.productId === productId ||
+        item.product?.id === productId ||
+        item._id === productId
+    );
+
+    // ✅ Optimistic Update
+    if (existingItem) {
+      setCartItems((prev) =>
+        prev.map((item) =>
+          item.productId === productId || item.product?.id === productId
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        )
+      );
+    } else {
+      setCartItems((prev) => [
+        ...prev,
+        {
+          _id: productId,
+          productId,
+          quantity,
+          price: 0, // price may be updated after fetch
+        },
+      ]);
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/cart/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId, quantity }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Add to cart failed");
+      }
+
+      await fetchCart(); // Sync latest cart
+    } catch (error) {
+      console.error("Add to cart failed", error);
+      setCartItems(prevCart); // 🔁 Rollback
+    }
+  };
+
+  const removeFromCart = async (productId: string) => {
+    if (!token || !API_BASE_URL) return;
+
+    const prevCart = [...cartItems];
+
+    // ✅ Optimistic Remove
+    setCartItems((prev) =>
+      prev.filter(
+        (item) =>
+          item.productId !== productId &&
+          item.product?.id !== productId &&
+          item._id !== productId
+      )
+    );
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/cart/remove/${productId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Remove from cart failed");
+      }
+
+      await fetchCart(); // Sync
+    } catch (error) {
+      console.error("Remove from cart failed", error);
+      setCartItems(prevCart); // 🔁 Rollback
+    }
+  };
+
+  const updateCartItemQuantity = async (
+    productId: string,
+    quantity: number
+  ) => {
+    if (!token || !API_BASE_URL) return;
+
+    const prevCart = [...cartItems];
+
+    // ✅ Optimistic Update
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.productId === productId ||
+        item.product?.id === productId ||
+        item._id === productId
+          ? { ...item, quantity }
+          : item
+      )
+    );
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/cart/update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId, quantity }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update cart quantity");
+      }
+
+      await fetchCart(); // Sync with backend
+    } catch (error) {
+      console.error("Update quantity failed:", error);
+      setCartItems(prevCart); // 🔁 Rollback
+    }
+  };
+
   const addSelectedToCart = async (productIds: string[]) => {
     if (!token || !API_BASE_URL) return;
 
@@ -137,10 +228,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
               Authorization: `Bearer ${token}`,
             },
           });
-          if (!res.ok) {
-            console.warn(`Cart check failed for ${productId}`);
-            continue;
-          }
+          if (!res.ok) continue;
           const data = await res.json();
           if (!data.inCart) filteredItems.push(productId);
         } catch (err) {
@@ -152,6 +240,17 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         alert("All selected items are already in your cart.");
         return;
       }
+
+      // ✅ Optimistic update (basic placeholder)
+      setCartItems((prev) => [
+        ...prev,
+        ...filteredItems.map((id) => ({
+          _id: id,
+          productId: id,
+          quantity: 1,
+          price: 0,
+        })),
+      ]);
 
       await Promise.all(
         filteredItems.map((productId) =>
@@ -171,34 +270,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     } catch (error) {
       console.error("Failed to add selected items to cart:", error);
       alert("Something went wrong while adding to cart.");
-    }
-  };
-  //update cart quentity
-  const updateCartItemQuantity = async (
-    productId: string,
-    quantity: number
-  ) => {
-    if (!token || !API_BASE_URL) return;
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/cart/update`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ productId, quantity }),
-      });
-
-      if (!res.ok) {
-        const errorBody = await res.text();
-        console.error("Response error body:", errorBody);
-        throw new Error("Failed to update cart quantity");
-      }
-
-      await fetchCart(); // Refresh state
-    } catch (error) {
-      console.error("Update quantity failed:", error);
+      await fetchCart(); // Try to recover state
     }
   };
 
@@ -210,9 +282,9 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         fetchCart,
         addToCart,
         removeFromCart,
+        updateCartItemQuantity,
         isInCart,
         addSelectedToCart,
-        updateCartItemQuantity, // Include the new function in context
       }}
     >
       {children}
