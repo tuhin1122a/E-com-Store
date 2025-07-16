@@ -10,7 +10,6 @@ import Link from "next/link";
 import { useEffect } from "react";
 
 export function CartItems({ cartData }: { cartData: any[] }) {
-  console.log("CartItems rendered with data:", cartData);
   const { cartItems, removeFromCart, updateCartItemQuantity, initializeCart } =
     useCart();
 
@@ -22,18 +21,15 @@ export function CartItems({ cartData }: { cartData: any[] }) {
     if (!hasClientData && cartData.length > 0) {
       initializeCart(cartData);
     }
-  }, [hasClientData, cartData, initializeCart]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const updateQuantity = async (productId: string, newQuantity: number) => {
+  const handleQuantityChange = (productId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      await removeFromCart(productId);
+      removeFromCart(productId);
     } else {
-      await updateCartItemQuantity(productId, newQuantity);
+      updateCartItemQuantity(productId, newQuantity);
     }
-  };
-
-  const removeItem = async (productId: string) => {
-    await removeFromCart(productId);
   };
 
   if (dataToRender.length === 0) {
@@ -103,7 +99,10 @@ export function CartItems({ cartData }: { cartData: any[] }) {
                         size="icon"
                         className="h-8 w-8"
                         onClick={() =>
-                          updateQuantity(item.productId, item.quantity - 1)
+                          handleQuantityChange(
+                            item.productId,
+                            item.quantity - 1
+                          )
                         }
                         disabled={!item?.product?.status || item.quantity <= 1}
                       >
@@ -115,7 +114,10 @@ export function CartItems({ cartData }: { cartData: any[] }) {
                         size="icon"
                         className="h-8 w-8"
                         onClick={() =>
-                          updateQuantity(item.productId, item.quantity + 1)
+                          handleQuantityChange(
+                            item.productId,
+                            item.quantity + 1
+                          )
                         }
                         disabled={!item?.product?.status}
                       >
@@ -126,7 +128,7 @@ export function CartItems({ cartData }: { cartData: any[] }) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeItem(item.productId)}
+                        onClick={() => removeFromCart(item.productId)}
                       >
                         <Trash2 className="h-4 w-4 mr-1" /> Remove
                       </Button>

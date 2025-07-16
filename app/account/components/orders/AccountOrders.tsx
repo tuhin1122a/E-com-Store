@@ -36,7 +36,6 @@ export function AccountOrders({
 
     if (userId && accessToken) fetchOrders();
   }, [userId, accessToken]);
-  console.log("Fetched Orders:", orders);
 
   const filteredOrders = orders.filter((order: any) => {
     const matchesSearch = order.orderNumber

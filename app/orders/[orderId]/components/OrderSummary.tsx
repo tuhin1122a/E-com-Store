@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 export function OrderSummary({ order }) {
-  console.log(order);
   return (
     <Card>
       <CardHeader>

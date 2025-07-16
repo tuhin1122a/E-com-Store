@@ -1,5 +1,6 @@
 "use client";
 
+import debounce from "lodash.debounce";
 import { useSession } from "next-auth/react";
 import {
   createContext,
@@ -37,7 +38,7 @@ interface CartContextType {
   ) => Promise<void>;
   isInCart: (productId: string) => boolean;
   addSelectedToCart: (productIds: string[]) => Promise<void>;
-  initializeCart: (items: CartItem[]) => void; // ✅ added
+  initializeCart: (items: CartItem[]) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -122,7 +123,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
           _id: productId,
           productId,
           quantity,
-          price: 0, // will sync later
+          price: 0,
         },
       ]);
     }
@@ -142,7 +143,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
       await fetchCart();
     } catch (error) {
       console.error("Add to cart failed", error);
-      setCartItems(prevCart); // 🔁 Rollback
+      setCartItems(prevCart);
     }
   };
 
@@ -151,7 +152,6 @@ export const CartProvider = ({ children }: CartProviderProps) => {
 
     const prevCart = [...cartItems];
 
-    // ✅ Optimistic Remove
     setCartItems((prev) =>
       prev.filter(
         (item) =>
@@ -174,28 +174,15 @@ export const CartProvider = ({ children }: CartProviderProps) => {
       await fetchCart();
     } catch (error) {
       console.error("Remove from cart failed", error);
-      setCartItems(prevCart); // 🔁 Rollback
+      setCartItems(prevCart);
     }
   };
 
-  const updateCartItemQuantity = async (
-    productId: string,
-    quantity: number
-  ) => {
-    if (!token || !API_BASE_URL) return;
-
-    const prevCart = [...cartItems];
-
-    // ✅ Optimistic Update
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.productId === productId ||
-        item.product?.id === productId ||
-        item._id === productId
-          ? { ...item, quantity }
-          : item
-      )
-    );
+  // ✅ Debounced quantity update setup
+  const pendingQuantityUpdates = new Map<string, number>();
+  const debouncedApiCall = debounce(async (productId: string) => {
+    const quantity = pendingQuantityUpdates.get(productId);
+    pendingQuantityUpdates.delete(productId);
 
     try {
       const res = await fetch(`${API_BASE_URL}/cart/update`, {
@@ -209,11 +196,33 @@ export const CartProvider = ({ children }: CartProviderProps) => {
 
       if (!res.ok) throw new Error("Failed to update cart quantity");
 
-      await fetchCart();
+      // ✅ Do NOT fetchCart here — UI already updated
+      // await fetchCart();
     } catch (error) {
       console.error("Update quantity failed:", error);
-      setCartItems(prevCart); // 🔁 Rollback
+      // (Optional): show toast or rollback manually
     }
+  }, 500);
+
+  const updateCartItemQuantity = async (
+    productId: string,
+    quantity: number
+  ) => {
+    if (!token || !API_BASE_URL || quantity < 1) return;
+
+    // ✅ Optimistic update
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.productId === productId ||
+        item.product?.id === productId ||
+        item._id === productId
+          ? { ...item, quantity }
+          : item
+      )
+    );
+
+    pendingQuantityUpdates.set(productId, quantity);
+    debouncedApiCall(productId);
   };
 
   const addSelectedToCart = async (productIds: string[]) => {
@@ -242,7 +251,6 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         return;
       }
 
-      // ✅ Optimistic update
       setCartItems((prev) => [
         ...prev,
         ...filteredItems.map((id) => ({
@@ -286,7 +294,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         updateCartItemQuantity,
         isInCart,
         addSelectedToCart,
-        initializeCart, // ✅ exposed
+        initializeCart,
       }}
     >
       {children}

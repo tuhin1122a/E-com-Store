@@ -30,7 +30,6 @@ export function CategoryProductsHeader({
   totalPages,
   searchParams,
 }: CategoryProductsHeaderProps) {
-  console.log(totalProducts);
   const router = useRouter();
   const urlSearchParams = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
