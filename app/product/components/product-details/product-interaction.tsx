@@ -11,61 +11,62 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Heart, Share2, ShoppingCart, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
 interface ProductInteractionProps {
-  product: any; // Ideally, define a proper type
+  product: any;
 }
 
 export function ProductInteraction({ product }: ProductInteractionProps) {
-  const { cartItems, addToCart, removeFromCart, isInCart } = useCart();
-  const {
-    items: wishlistItems,
-    addToWishlist,
-    removeFromWishlist,
-    isInWishlist,
-  } = useWishlist();
+  const { isInCart, addToCart, removeFromCart } = useCart();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
-  const [quantity, setQuantity] = useState(1);
-  const [loadingCart, setLoadingCart] = useState(false);
-  const [loadingWishlist, setLoadingWishlist] = useState(false);
   const productId = product.id;
-  const inCart = isInCart(product.id);
-  const inWishlist = isInWishlist(product.id);
+  const [quantity, setQuantity] = useState(1);
 
-  // 🔁 Unified toggle for cart
+  // ✅ Local UI states for instant toggle
+  const [inCartUI, setInCartUI] = useState(false);
+  const [inWishlistUI, setInWishlistUI] = useState(false);
+
+  // 🔄 Sync local state with context
+  useEffect(() => {
+    setInCartUI(isInCart(productId));
+  }, [isInCart, productId]);
+
+  useEffect(() => {
+    setInWishlistUI(isInWishlist(productId));
+  }, [isInWishlist, productId]);
+
   const toggleCart = async () => {
-    setLoadingCart(true);
+    setInCartUI((prev) => !prev); // Optimistic UI
+
     try {
-      if (inCart) {
-        await removeFromCart(product.id);
+      if (inCartUI) {
+        await removeFromCart(productId);
       } else {
         await addToCart(productId, quantity);
       }
     } catch (error) {
       console.error("Cart toggle error:", error);
-      alert("Failed to update cart.");
-    } finally {
-      setLoadingCart(false);
+      setInCartUI((prev) => !prev); // Rollback
     }
   };
 
-  const handleToggleWishlist = async () => {
-    setLoadingWishlist(true);
+  const toggleWishlist = async () => {
+    setInWishlistUI((prev) => !prev); // Optimistic UI
+
     try {
-      if (inWishlist) {
-        await removeFromWishlist(product.id);
+      if (inWishlistUI) {
+        await removeFromWishlist(productId);
       } else {
-        await addToWishlist(product.id);
+        await addToWishlist(productId);
       }
     } catch (error) {
       console.error("Wishlist toggle error:", error);
-      alert("Failed to update wishlist.");
-    } finally {
-      setLoadingWishlist(false);
+      setInWishlistUI((prev) => !prev); // Rollback
     }
   };
 
@@ -102,12 +103,10 @@ export function ProductInteraction({ product }: ProductInteractionProps) {
           size="lg"
           className="flex-1"
           onClick={toggleCart}
-          disabled={loadingCart || product.inventoryQuantity < 1}
-          variant={inCart ? "destructive" : "default"}
+          disabled={product.inventoryQuantity < 1}
+          variant={inCartUI ? "destructive" : "default"}
         >
-          {loadingCart ? (
-            "Processing..."
-          ) : inCart ? (
+          {inCartUI ? (
             <>
               <X className="h-5 w-5 mr-2" />
               Remove from Cart
@@ -120,19 +119,14 @@ export function ProductInteraction({ product }: ProductInteractionProps) {
           )}
         </Button>
 
-        <Button
-          size="lg"
-          variant="outline"
-          onClick={handleToggleWishlist}
-          disabled={loadingWishlist}
-        >
+        <Button size="lg" variant="outline" onClick={toggleWishlist}>
           <Heart
             className={cn(
               "h-5 w-5 mr-2",
-              inWishlist ? "fill-red-500 text-red-500" : ""
+              inWishlistUI ? "fill-red-500 text-red-500" : ""
             )}
           />
-          {inWishlist ? "Wishlisted" : "Add to Wishlist"}
+          {inWishlistUI ? "Wishlisted" : "Add to Wishlist"}
         </Button>
 
         <Button size="lg" variant="outline">
