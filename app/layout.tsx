@@ -6,6 +6,7 @@ import "./globals.css";
 import ClientProviders from "@/components/ClientProviders";
 import { Footer } from "@/components/footer";
 import Header from "@/components/home/header/Header";
+import VisitorCount from "@/components/share/VisitorCount";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -52,6 +53,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ClientProviders>
+            <VisitorCount />
             <div className="min-h-screen flex flex-col">
               <Header />
               <main className="flex-1">{children}</main>
