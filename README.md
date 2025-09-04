@@ -103,10 +103,19 @@ A modern, full-stack e-commerce platform built with Next.js, Express.js, MongoDB
 
 ## 🔐 Demo Accounts
 
-After seeding the database, you can use these demo accounts:
+After seeding the database, you can use the following demo accounts to explore the platform:
 
-- **Admin**: admin@ecomstore.com / admin123
-- **User**: test@example.com / test123
+### 🛠 Admin Panel Access
+- 🔗 **Login URL:** [https://e-comstore-dashboard.vercel.app/](https://e-comstore-dashboard.vercel.app/)
+- **Email:** `admin@ecomstore.com`
+- **Password:** `admin123`
+
+### 👤 Regular User Access
+- **Email:** `test@example.com`
+- **Password:** `test123`
+
+> ℹ️ Note: Please ensure the database is properly seeded before logging in.
+
 
 ## 📚 API Documentation
 
