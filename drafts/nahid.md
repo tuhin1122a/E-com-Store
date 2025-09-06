@@ -1,3 +1,0 @@
-# nahid
-
-naihd
