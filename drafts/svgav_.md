@@ -1,3 +1,0 @@
-# svgav 
-
-sf sabg a

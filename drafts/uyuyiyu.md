@@ -1,3 +1,0 @@
-# uyuyiyu
-
-sX

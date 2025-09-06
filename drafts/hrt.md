@@ -1,3 +1,0 @@
-# hrt
-
-hryhryhrsyh

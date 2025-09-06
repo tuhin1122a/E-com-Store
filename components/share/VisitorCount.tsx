@@ -30,3 +30,4 @@ export default function VisitorCount() {
 
   return <p>Total Visitors: {count}</p>;
 }
+ 
