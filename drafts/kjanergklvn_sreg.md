@@ -1,3 +1,0 @@
-# kjanergklvn sreg
-
-elgridvjiopernsblfnarelbf
